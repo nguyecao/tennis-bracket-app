@@ -10,6 +10,7 @@
   --danger: #c8653a;
   --line: #ffffff;
   --ink: #1b2a22;
+  --path: var(--court); /* winner lines (highlight is too light on white) */
 }
 [data-theme='wimbledon'] {
   /* Official: green Pantone 349 C (#046A38), purple Pantone 268 C (#582C83).
@@ -34,6 +35,7 @@
   --danger: #c62828;
   --line: #ffffff;
   --ink: #0e1a2b;
+  --path: var(--court); /* winner lines (highlight is too light on white) */
 }
 [data-theme='us-open'] {
   /* Primary: blue. Secondary: yellow. Accent: white. */
@@ -46,6 +48,7 @@
   --danger: #c62828;
   --line: #ffffff;
   --ink: #14213d;
+  --path: var(--court); /* winner lines (highlight is too light on white) */
 }
 [data-theme='roland-garros'] {
   --surround: #a84b23;
@@ -148,7 +151,14 @@ textarea:focus { outline: none; border-color: var(--court); }
   font-size: 1rem;
 }
 
-.bracket { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
+.bracket {
+  --gap: 2.5rem; /* space between rounds, where the lines go */
+  --bracket-line: #c9d3cd;
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
 .round { display: flex; flex-direction: column; min-width: 190px; }
 .round h3 {
   margin: 0 0 0.75rem;
@@ -157,7 +167,53 @@ textarea:focus { outline: none; border-color: var(--court); }
   letter-spacing: 0.05em;
   color: var(--accent);
 }
-.matches { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 0.75rem; }
+.matches { flex: 1; display: flex; flex-direction: column; }
+
+/* Bracket lines */
+.slot {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0;
+}
+.slot > .match { width: 100%; }
+
+/* Outgoing elbow: from the match's right edge to the midpoint of its pair */
+.round:not(:last-child) .slot::after {
+  content: '';
+  position: absolute;
+  right: calc(var(--gap) / -2);
+  width: calc(var(--gap) / 2);
+  border: 0 solid var(--bracket-line);
+  border-right-width: 2px;
+}
+.round:not(:last-child) .slot:nth-child(odd)::after {
+  top: 50%;
+  bottom: 0;
+  border-top-width: 2px;
+  border-top-right-radius: 8px;
+}
+.round:not(:last-child) .slot:nth-child(even)::after {
+  top: 0;
+  bottom: 50%;
+  border-bottom-width: 2px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Incoming line: from the midpoint into the next match */
+.round:not(:first-child) .slot::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--gap) / -2);
+  width: calc(var(--gap) / 2);
+  top: 50%;
+  border-top: 2px solid var(--bracket-line);
+}
+
+/* A winner's path is drawn in the theme's highlight color */
+.round .slot.decided::after,
+.round .slot.filled::before { border-color: var(--path, var(--ball)); }
 
 .match {
   border: 2px solid var(--court);
