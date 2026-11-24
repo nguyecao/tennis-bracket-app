@@ -92,7 +92,9 @@ header {
 
 h1 { margin: 0 auto 0 0; color: var(--line); font-size: 1.8rem; }
 
-.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+/* On wider screens the action buttons and theme button flow together in .controls */
+.actions { display: contents; }
 
 button {
   font: inherit;
@@ -445,7 +447,8 @@ button.resume {
   /* Header: title + theme on the first row, actions in one compact row below */
   header { gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 0.75rem; }
   h1 { font-size: 1.35rem; }
-  .actions { order: 3; width: 100%; gap: 0.35rem; }
+  .controls { display: contents; } /* let title, theme and actions arrange individually */
+  .actions { display: flex; flex-wrap: wrap; align-items: center; order: 3; width: 100%; gap: 0.35rem; }
   header button { padding: 0.4rem 0.7rem; font-size: 0.85rem; }
   .pill { font-size: 0.8rem; padding: 0.4rem 0.75rem; }
   .wide-only { display: none; }
