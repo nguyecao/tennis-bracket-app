@@ -673,3 +673,14 @@ button.resume {
 @media (max-width: 600px) {
   .tournament-title h2, .title-input { font-size: 1.3rem; }
 }
+
+.tie-note {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ball) 30%, #fff);
+}
+.notice-bar.own-room { color: var(--line); background: rgba(255, 255, 255, 0.12); }

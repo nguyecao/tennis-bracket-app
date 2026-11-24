@@ -72,10 +72,12 @@ export function useHost(code, tournament, theme) {
           sync()
           conn.send(latest.current)
         })
-        conn.on('close', () => {
+        const drop = () => {
           conns.current = conns.current.filter((c) => c !== conn)
           sync()
-        })
+        }
+        conn.on('close', drop)
+        conn.on('error', drop) // viewer vanished without a clean goodbye
       })
     }
 
@@ -84,9 +86,14 @@ export function useHost(code, tournament, theme) {
     let release
     const ctrl = new AbortController()
     if (navigator.locks) {
-      setStatus('elsewhere')
+      // Only say "live in another tab" if we don't get the lock straight away
+      let acquired = false
+      setStatus('connecting')
+      const waiting = setTimeout(() => !acquired && !stopped && setStatus('elsewhere'), 400)
       navigator.locks
         .request(PREFIX + code, { signal: ctrl.signal }, () => {
+          acquired = true
+          clearTimeout(waiting)
           if (stopped) return
           start()
           return new Promise((r) => (release = r))

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { makeSlots, shuffle, withPick } from '../lib/bracket'
+import { makeSlots, shuffle, withPick, withTieOrder } from '../lib/bracket'
 import { makeGroups } from '../lib/groups'
 import { useSavedState } from '../lib/storage'
 import { useTheme } from '../lib/theme'
@@ -48,8 +48,7 @@ export default function Host({ startAtHome = false }) {
   const rename = (name) => update({ tournament: { ...tournament, name } })
 
   // Host's order for group players still tied after head-to-head
-  const reorder = (group, order) =>
-    update({ tournament: { ...tournament, tieOrder: { ...tournament.tieOrder, [group]: order } } })
+  const reorder = (group, order) => update({ tournament: withTieOrder(tournament, group, order) })
 
   // Ask before throwing away entered results.
   const hasResults = tournament && Object.keys(tournament.winners).length > 0
@@ -57,7 +56,7 @@ export default function Host({ startAtHome = false }) {
   const guard = (title, message, label, action) =>
     hasResults ? setConfirm({ title, message, label, action }) : action()
 
-  const clearResults = () => update({ tournament: { ...tournament, winners: {} } })
+  const clearResults = () => update({ tournament: { ...tournament, winners: {}, tieOrder: {} } })
   const newTournament = () => update({ tournament: null })
 
   return (

@@ -17,6 +17,13 @@ export default function App() {
     setLeftRoom(true)
   }
 
+  // Opened your own room's link: switch to hosting it instead of watching
+  function hostInstead() {
+    history.replaceState(null, '', location.pathname + location.search)
+    setWatching('')
+    setLeftRoom(false)
+  }
+
   useEffect(() => {
     const onHash = () => setWatching(hashRoom())
     window.addEventListener('hashchange', onHash)
@@ -24,7 +31,7 @@ export default function App() {
   }, [])
 
   return watching ? (
-    <Viewer key={watching} code={watching} onLeave={leave} />
+    <Viewer key={watching} code={watching} onLeave={leave} onHost={hostInstead} />
   ) : (
     <Host startAtHome={leftRoom} />
   )

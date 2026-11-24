@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { isTournament } from './bracket'
+import { GROUP_SIZES } from './groups'
 
 // The host's state (names, options, bracket, room code), saved in localStorage.
 const KEY = 'tennis-bracket'
@@ -21,9 +22,26 @@ function load() {
     if (!isTournament(saved.tournament)) saved.tournament = null
     if (typeof saved.text !== 'string') saved.text = ''
     if (typeof saved.name !== 'string') saved.name = ''
+    // Settings from an older version, or edited by hand, fall back to defaults
+    const allowed = (value, options, fallback) => (options.includes(value) ? value : fallback)
+    saved.mode = allowed(saved.mode, ['shuffle', 'rank'], START.mode)
+    saved.format = allowed(saved.format, ['knockout', 'groups'], START.format)
+    saved.groupSize = allowed(saved.groupSize, [...GROUP_SIZES, 'all'], START.groupSize)
+    saved.advance = allowed(saved.advance, [1, 2, 3, 'all'], START.advance)
+    saved.consolation = saved.consolation === true
+    if (typeof saved.room !== 'string') saved.room = null
     return saved
   } catch {
     return START
+  }
+}
+
+// The room this browser hosts (used to spot someone opening their own room link)
+export function savedRoom() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY))?.room || null
+  } catch {
+    return null
   }
 }
 

@@ -5,7 +5,12 @@ import { isPoolPlay, groupWord } from '../lib/groups'
 export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, onShowMain }) {
   const allDone = groups.every((g) => g.done)
   // One group and nobody goes on: pure round robin, the group winner is the champion
-  const champion = !hasMainDraw && allDone ? groups[0].table[0].name : null
+  // (not while players are still level at the top and the host hasn't ordered them)
+  const top = groups[0].table
+  const champion =
+    !hasMainDraw && allDone && !(groups[0].openTie && top[0].tieKey && top[0].tieKey === top[1]?.tieKey)
+      ? top[0].name
+      : null
   const pools = isPoolPlay(advance) // everyone goes on; results only decide seeding
   const word = groupWord(advance)
 
@@ -77,6 +82,10 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf }) {
           {done ? 'Complete' : `${played}/${matches.length} played`}
         </span>
       </div>
+
+      {group.openTie && onReorder && (
+        <p className="tie-note">Players marked = are still tied. Use ▲▼ to set their order.</p>
+      )}
 
       <table className="standings">
         <thead>

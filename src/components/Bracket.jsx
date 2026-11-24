@@ -13,11 +13,12 @@ function roundName(matches) {
 // match always lines up halfway between the two matches that feed it. The connector
 // lines are drawn in CSS (see "Bracket lines" in App.css).
 // labels (optional): placeholder text for first-round spots still waiting on a group.
-export default function Bracket({ title, rounds, labels, onPick, seedOf }) {
+// waiting: the draw can't start yet (group stage still running), so no round is "in progress".
+export default function Bracket({ title, rounds, labels, onPick, seedOf, waiting = false }) {
   const champion = rounds.at(-1)[0].winner
   // The round in progress: the earliest round that still has an unplayed match.
   // (-1 when the bracket is finished.)
-  const current = rounds.findIndex((matches) => matches.some((m) => m.winner === null))
+  const current = waiting ? -1 : rounds.findIndex((matches) => matches.some((m) => m.winner === null))
 
   // On narrow screens only a column or two fits. When the round in progress changes
   // (or a viewer joins mid-tournament), scroll it into view if it's off screen.

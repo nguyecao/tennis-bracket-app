@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { parseNames, nameError } from '../lib/names'
-import { planGroups, GROUP_SIZES, RECOMMENDED_GROUP_SIZE } from '../lib/groups'
+import { planGroups, GROUP_SIZES, RECOMMENDED_GROUP_SIZE, MAX_SINGLE_GROUP } from '../lib/groups'
 import JoinRoom from './JoinRoom'
 import { DEFAULT_NAME } from './TournamentTitle'
 
@@ -157,6 +157,11 @@ function describeGroups(count, size, advance) {
   if (count < 2) return null
   const { groups, sizes, smallest, largest } = planGroups(count, size)
   const pools = advance === 'all'
+  if (groups === 1 && count > MAX_SINGLE_GROUP) {
+    return {
+      error: `One group works for up to ${MAX_SINGLE_GROUP} players (that's already ${(MAX_SINGLE_GROUP * (MAX_SINGLE_GROUP - 1)) / 2} matches). Choose a group size instead.`,
+    }
+  }
   if (!pools && smallest <= advance) {
     return {
       error: `Each group needs more than ${advance} player${advance > 1 ? 's' : ''}. Choose bigger groups or fewer advancing.`,

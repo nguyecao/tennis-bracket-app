@@ -1,13 +1,14 @@
 import { useEffect } from 'react'
 import { useViewer } from '../lib/live'
 import { useTheme } from '../lib/theme'
+import { savedRoom } from '../lib/storage'
 import Header from './Header'
 import Tournament from './Tournament'
 
 const LABELS = { connecting: 'Connecting…', live: 'Live', offline: 'Host offline, retrying…' }
 
 // Read-only view of someone else's live room.
-export default function Viewer({ code, onLeave }) {
+export default function Viewer({ code, onLeave, onHost }) {
   const { status, tournament, theme: hostTheme } = useViewer(code)
 
   // Follow the host's theme when you join and whenever the host changes it.
@@ -17,6 +18,9 @@ export default function Viewer({ code, onLeave }) {
     if (hostTheme) setTheme(hostTheme)
   }, [hostTheme, setTheme])
 
+  // This browser is the host of this room (e.g. you opened your own share link)
+  const ownRoom = savedRoom() === code
+
   return (
     <div className="app">
       <Header theme={theme} onThemeChange={setTheme} hostTheme={hostTheme}>
@@ -25,6 +29,15 @@ export default function Viewer({ code, onLeave }) {
         </span>
         <button onClick={onLeave}>Leave</button>
       </Header>
+
+      {ownRoom && status !== 'live' && (
+        <div className="notice-bar own-room">
+          This is your room. You're viewing it as a spectator.
+          <button className="primary" onClick={onHost}>
+            Go to host view
+          </button>
+        </div>
+      )}
 
       {tournament ? (
         <Tournament key={tournament.created} t={tournament} />

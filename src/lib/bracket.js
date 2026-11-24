@@ -97,20 +97,38 @@ export function getBrackets(t) {
   return { groups, main, consolation, labels, drawSeeds }
 }
 
-// Toggle a winner, then drop any later picks that no longer apply
-// (e.g. you changed an earlier result and that player is no longer in the match).
+// Drop any picks that no longer apply (e.g. an earlier result or a group's order changed
+// and that player is no longer in the match).
+function prune(t) {
+  const { groups, main, consolation } = getBrackets(t)
+  const kept = {}
+  const all = [...(groups || []).flatMap((g) => g.matches), ...[...(main || []), ...(consolation || [])].flat()]
+  for (const m of all) {
+    if (t.winners[m.id] && t.winners[m.id] === m.winner) kept[m.id] = m.winner
+  }
+  return { ...t, winners: kept }
+}
+
+// Toggle a winner (click again to undo), then tidy up anything that depended on it.
 export function withPick(t, id, name) {
   const winners = { ...t.winners }
   if (winners[id] === name) delete winners[id]
   else winners[id] = name
 
-  const { groups, main, consolation } = getBrackets({ ...t, winners })
-  const kept = {}
-  const all = [...(groups || []).flatMap((g) => g.matches), ...[...(main || []), ...(consolation || [])].flat()]
-  for (const m of all) {
-    if (winners[m.id] && winners[m.id] === m.winner) kept[m.id] = m.winner
+  // A changed group result can create different ties, so the host's tie order for that
+  // group no longer applies.
+  let tieOrder = t.tieOrder
+  const group = /^g(\d+)-/.exec(id)?.[1]
+  if (group != null && tieOrder?.[group]) {
+    tieOrder = { ...tieOrder }
+    delete tieOrder[group]
   }
-  return { ...t, winners: kept }
+  return prune({ ...t, winners, tieOrder })
+}
+
+// Host put tied group players in order. This can change who advances, so tidy the Main Draw.
+export function withTieOrder(t, group, order) {
+  return prune({ ...t, tieOrder: { ...t.tieOrder, [group]: order } })
 }
 
 // Sanity-check a tournament from localStorage or from a live room.

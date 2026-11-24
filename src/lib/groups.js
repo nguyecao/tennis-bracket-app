@@ -9,6 +9,8 @@ import { BYE, seedOrder } from './bracket'
 
 export const RECOMMENDED_GROUP_SIZE = 4
 export const GROUP_SIZES = [3, 4, 5, 6, 8]
+// One group of n players means n×(n−1)/2 matches: 16 players is already 120
+export const MAX_SINGLE_GROUP = 16
 
 const groupName = (i) => (i < 26 ? String.fromCharCode(65 + i) : String(i + 1))
 const ordinal = (n) => ['1st', '2nd', '3rd'][n - 1] || `${n}th`
@@ -97,15 +99,20 @@ export function getGroups(t) {
       })
     )
     const matches = rounds.flat()
+    const done = matches.every((m) => m.winner)
+    const tiesSet = !!t.tieOrder?.[gi]
+    const table = standings(g.players, matches, t.tieOrder?.[gi])
     return {
       ...g,
       index: gi,
       rounds,
       matches,
       played: matches.filter((m) => m.winner).length,
-      done: matches.every((m) => m.winner),
-      tiesSet: !!t.tieOrder?.[gi], // host has put tied players in order
-      table: standings(g.players, matches, t.tieOrder?.[gi]),
+      done,
+      tiesSet, // host has put tied players in order
+      table,
+      // finished, but some players are still level after head-to-head and the host hasn't ordered them
+      openTie: done && !tiesSet && table.some((r) => r.tieKey),
     }
   })
 }

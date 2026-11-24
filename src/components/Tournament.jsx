@@ -64,7 +64,14 @@ export default function Tournament({ t, onPick, onReorder, onRename }) {
         />
       ) : (
         <>
-          <Bracket title="Main Draw" rounds={main} labels={labels} onPick={onPick} seedOf={drawSeedOf} />
+          <Bracket
+            title="Main Draw"
+            rounds={main}
+            labels={labels}
+            onPick={onPick}
+            seedOf={drawSeedOf}
+            waiting={!groupsDone}
+          />
           {consolation && (
             <Bracket title="Consolation" rounds={consolation} onPick={onPick} seedOf={drawSeedOf} />
           )}
