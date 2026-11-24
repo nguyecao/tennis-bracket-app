@@ -5,13 +5,15 @@ import { BYE, getBrackets } from '../lib/bracket'
 import Bracket from './Bracket'
 import GroupStage from './GroupStage'
 import TournamentTitle from './TournamentTitle'
+import QrCard from './QrShare'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
 // Main draw + optional consolation, and for group-stage tournaments a Group Stage tab.
 // Leave out onPick / onReorder for a read-only (viewer) view.
 // Tabs: [Group Stage] · Main Draw · Players. Leave out onPick / onReorder for a read-only (viewer) view.
 // defaultName: shown when the tournament has no name (depends on the theme).
-export default function Tournament({ t, onPick, onReorder, onRename, onRedate, defaultName }) {
+// shareRoom: live room code, if any; shows a QR code people can scan to watch.
+export default function Tournament({ t, onPick, onReorder, onRename, onRedate, defaultName, shareRoom }) {
   const brackets = getBrackets(t)
   const { groups, main, consolation, labels, drawSeeds } = brackets
   // Seeds from the player list (Rank mode). After a group stage, the Main Draw
@@ -35,35 +37,40 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, d
 
   return (
     <>
-      <TournamentTitle
-        name={t.name}
-        date={t.date}
-        created={t.created}
-        onRename={onRename}
-        onRedate={onRedate}
-        defaultName={defaultName}
-      />
-
-      <div className="tabs" role="tablist">
-        {groups && (
-          <button role="tab" aria-selected={tab === 'groups'} onClick={() => setTab('groups')}>
-            <span className="wide-only">{stageName}</span>
-            <span className="narrow-only">{stageShort}</span>
-            <span className="tab-meta">
-              {played}/{total}
-            </span>
-          </button>
-        )}
-        {main && (
-          <button role="tab" aria-selected={tab === 'main'} onClick={() => setTab('main')}>
-            <span className="wide-only">Main Draw</span>
-            <span className="narrow-only">Draw</span>
-            {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta">Ready</span>}
-          </button>
-        )}
-        <button role="tab" aria-selected={tab === 'players'} onClick={() => setTab('players')}>
-          Players <span className="tab-meta">{followed.size ? `★ ${followed.size}` : playerCount}</span>
-        </button>
+      {/* Left: name, date and tabs. Right: QR code (when live). Stacks on phones. */}
+      <div className="title-row">
+        <div className="title-main">
+          <TournamentTitle
+            name={t.name}
+            date={t.date}
+            created={t.created}
+            onRename={onRename}
+            onRedate={onRedate}
+            defaultName={defaultName}
+          />
+          <div className="tabs" role="tablist">
+            {groups && (
+              <button role="tab" aria-selected={tab === 'groups'} onClick={() => setTab('groups')}>
+                <span className="wide-only">{stageName}</span>
+                <span className="narrow-only">{stageShort}</span>
+                <span className="tab-meta">
+                  {played}/{total}
+                </span>
+              </button>
+            )}
+            {main && (
+              <button role="tab" aria-selected={tab === 'main'} onClick={() => setTab('main')}>
+                <span className="wide-only">Main Draw</span>
+                <span className="narrow-only">Draw</span>
+                {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta">Ready</span>}
+              </button>
+            )}
+            <button role="tab" aria-selected={tab === 'players'} onClick={() => setTab('players')}>
+              Players <span className="tab-meta">{followed.size ? `★ ${followed.size}` : playerCount}</span>
+            </button>
+          </div>
+        </div>
+        {shareRoom && <QrCard room={shareRoom} />}
       </div>
 
       {tab === 'players' ? (

@@ -25,7 +25,8 @@ export default function Viewer({ code, onLeave, onHost }) {
     <div className="app">
       <Header theme={theme} onThemeChange={setTheme} hostTheme={hostTheme}>
         <span className={`pill ${status}`}>
-          Room {code} · {LABELS[status]}
+          Room {code} ·{' '}
+          <span className={status === 'live' ? '' : 'loading'}>{LABELS[status]}</span>
         </span>
         <button onClick={onLeave}>Leave</button>
       </Header>
@@ -44,10 +45,11 @@ export default function Viewer({ code, onLeave, onHost }) {
         <Tournament
           key={tournament.created}
           t={tournament}
+          shareRoom={code}
           defaultName={findTheme(hostTheme ?? theme.id).defaultName}
         />
       ) : (
-        <p className="notice">
+        <p className="notice loading">
           {tournament === null ? 'The host is setting up a new bracket…' : 'Waiting for the host…'}
         </p>
       )}

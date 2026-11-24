@@ -565,6 +565,7 @@ button.resume {
   border: 0;
   padding: 0.45rem 1rem;
   font-weight: 600;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -688,15 +689,17 @@ button.resume {
 .name-input:focus { outline: none; border-color: var(--court); }
 
 .tournament-title { margin: 0 0 1rem; color: var(--line); }
+.title-main .tournament-title { margin-bottom: 0.9rem; }
 .tournament-title h2 {
   margin: 0;
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 1.6rem;
+  font-size: 2.3rem;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
-.tournament-title p { margin: 0.15rem 0 0; opacity: 0.75; font-size: 0.9rem; }
+.tournament-title p { margin: 0.25rem 0 0; opacity: 0.8; font-size: 1.05rem; }
 .edit-name {
   border: 0;
   padding: 0.1rem 0.4rem;
@@ -708,7 +711,7 @@ button.resume {
 .title-input {
   width: min(100%, 32rem);
   font: inherit;
-  font-size: 1.6rem;
+  font-size: 2.3rem;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border: 2px solid var(--line);
@@ -720,7 +723,7 @@ button.resume {
 .title-input:focus { outline: none; }
 
 @media (max-width: 600px) {
-  .tournament-title h2, .title-input { font-size: 1.3rem; }
+  .tournament-title h2, .title-input { font-size: 1.65rem; }
 }
 
 .tie-note {
@@ -768,9 +771,12 @@ button.resume {
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  grid-auto-rows: 1fr; /* every player card is as tall as the tallest one */
 }
+.player-list > li { display: flex; }
 .player-row {
   width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -789,7 +795,14 @@ button.resume {
 .pl-name { display: flex; align-items: center; gap: 0.4rem; font-weight: 600; min-width: 0; }
 .pl-name .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-name .seed { background: #eef2ef; color: var(--ink); }
-.pl-status { font-size: 0.85rem; color: #5b6b62; }
+/* One line per status (long ones end in "…") so cards don't grow from wrapping */
+.pl-status {
+  font-size: 0.85rem;
+  color: #5b6b62;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .pl-status.alive { color: var(--court); font-weight: 600; }
 .pl-status.out { color: #8a9a91; }
 .pl-status.champ-line { color: var(--ink); font-weight: 700; }
@@ -803,16 +816,16 @@ button.resume {
 
 /* Date under the tournament name (host can tap it to change) */
 .date-button {
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
   padding: 0.1rem 0.4rem;
   margin-left: -0.4rem;
   border: 0;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   color: var(--line);
   opacity: 0.75;
 }
-.date-button span { font-size: 0.85em; opacity: 0.8; }
+.date-button .pencil { width: 0.8em; margin-left: 0.3em; opacity: 0.8; }
 .date-button:hover, .date-button:focus-visible { opacity: 1; background: rgba(255, 255, 255, 0.12); }
 .date-input {
   margin-top: 0.2rem;
@@ -825,3 +838,87 @@ button.resume {
   background: rgba(255, 255, 255, 0.1);
   color-scheme: dark; /* white calendar icon on the dark header */
 }
+
+/* QR code to watch the room */
+.qr {
+  display: block;
+  width: min(280px, 70vw);
+  height: auto;
+  margin: 0.25rem auto 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8e4;
+}
+.modal .qr-code-label { text-align: center; margin: 0 0 1rem; letter-spacing: 0.04em; }
+.qr-code-label strong { font-size: 1.25rem; letter-spacing: 0.12em; }
+.qr-actions { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+.qr-actions .link-box { margin: 0; flex: 1; min-width: 0; }
+
+/* Tournament name on the left, QR card on the right (stacks on narrow screens) */
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+/* Name and date on top, tabs at the bottom, lined up with the bottom of the QR card */
+.title-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.title-main .tabs { margin-bottom: 0; }
+.title-row .qr-card { align-self: flex-start; }
+
+.qr-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+  border: 0;
+  border-radius: 12px;
+  border-top: 4px solid var(--ball);
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+}
+.qr-card .qr { width: 104px; margin: 0; border: 0; border-radius: 4px; }
+.qr-card-text { display: grid; gap: 0.15rem; font-size: 0.9rem; }
+.qr-card-text strong { font-size: 1rem; color: var(--court-dark); }
+.qr-card-hint { font-size: 0.8rem; color: #6b7c72; }
+@media (hover: hover) { .qr-card:hover { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); } }
+
+@media (max-width: 600px) {
+  .title-main { display: contents; } /* phones: name, then QR card, then tabs */
+  .title-main .tournament-title { order: 1; margin-bottom: 0; }
+  .title-row .qr-card { order: 2; }
+  .title-main .tabs { order: 3; }
+  .qr-card { width: 100%; }
+  .qr-card .qr { width: 92px; }
+}
+
+/* Loading / waiting messages gently fade in and out */
+.loading { animation: loading-fade 2.4s ease-in-out infinite; }
+@keyframes loading-fade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) { .loading { animation: none; } }
+
+/* Edit (pencil) icon next to the tournament name and date */
+.pencil {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.edit-name { display: inline-flex; align-items: center; }
+.edit-name .pencil { width: 1.1rem; height: 1.1rem; }

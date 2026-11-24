@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { useHost, makeCode, roomLink } from '../lib/live'
 import Modal from './Modal'
+import { useWakeLock } from '../lib/wakeLock'
 
 // Host side of a live room: Go live / room status / Copy link / Stop sharing.
 export default function LiveControls({ room, tournament, theme, onRoomChange }) {
   const { status, viewers } = useHost(room, tournament, theme)
+
+  // While this tab is hosting a room, keep the screen awake so viewers don't lose
+  // the connection when the phone would normally auto-lock.
+  useWakeLock(!!room && status !== 'elsewhere' && status !== 'off')
   const [copied, setCopied] = useState(false)
   const [manualCopy, setManualCopy] = useState(false) // clipboard blocked: show the link instead
 
@@ -27,11 +32,12 @@ export default function LiveControls({ room, tournament, theme, onRoomChange }) 
     <>
       <span className={`pill ${status}`}>
         Room {room} ·{' '}
-        {status === 'live'
-          ? `${viewers} watching`
-          : status === 'elsewhere'
-            ? 'live in another tab'
-            : 'Connecting…'}
+        {status === 'live' ? (
+          `${viewers} watching`
+        ) : (
+          // Waiting states gently fade in and out
+          <span className="loading">{status === 'elsewhere' ? 'live in another tab' : 'Connecting…'}</span>
+        )}
       </span>
       <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy link'}</button>
       <button onClick={() => onRoomChange(null)}>

@@ -112,6 +112,7 @@ export default function Host({ startAtHome = false }) {
           onRename={rename}
           onRedate={redate}
           defaultName={theme.defaultName}
+          shareRoom={state.room}
         />
       ) : (
         <Setup
