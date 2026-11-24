@@ -363,7 +363,9 @@ button.resume {
   right: 0;
   top: calc(100% + 0.5rem);
   z-index: 10;
-  min-width: 220px;
+  /* never wider than the page's content area (1.5rem padding each side) */
+  min-width: min(220px, calc(100vw - 3rem));
+  max-width: calc(100vw - 3rem);
   margin: 0;
   padding: 0.4rem;
   list-style: none;

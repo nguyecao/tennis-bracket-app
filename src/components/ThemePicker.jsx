@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { THEMES } from '../lib/theme'
 
 // Custom dropdown (instead of the OS <select>) so it matches the app.
@@ -8,6 +8,7 @@ export default function ThemePicker({ theme: current, onChange, hostTheme }) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0) // highlighted option
   const ref = useRef(null)
+  const menuRef = useRef(null)
 
   // Close when clicking anywhere else
   useEffect(() => {
@@ -15,6 +16,24 @@ export default function ThemePicker({ theme: current, onChange, hostTheme }) {
     const onDown = (e) => !ref.current.contains(e.target) && setOpen(false)
     document.addEventListener('pointerdown', onDown)
     return () => document.removeEventListener('pointerdown', onDown)
+  }, [open])
+
+  // The menu opens right-aligned to the button. On narrow screens that can push it
+  // past the left edge, so nudge it right until it starts no further left than the
+  // bracket (the page's content edge). Runs before paint, so there's no jump.
+  useLayoutEffect(() => {
+    if (!open) return
+    function place() {
+      const menu = menuRef.current
+      const app = ref.current.closest('.app')
+      menu.style.right = '0px'
+      const minLeft = app.getBoundingClientRect().left + parseFloat(getComputedStyle(app).paddingLeft)
+      const overflow = minLeft - menu.getBoundingClientRect().left
+      if (overflow > 0) menu.style.right = `${-overflow}px`
+    }
+    place()
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
   }, [open])
 
   function toggle() {
@@ -62,7 +81,7 @@ export default function ThemePicker({ theme: current, onChange, hostTheme }) {
       </button>
 
       {open && (
-        <ul className="dropdown-menu" role="listbox" aria-label="Theme">
+        <ul ref={menuRef} className="dropdown-menu" role="listbox" aria-label="Theme">
           {THEMES.map((t, i) => (
             <li
               key={t.id}
