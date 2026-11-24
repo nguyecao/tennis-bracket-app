@@ -170,7 +170,7 @@ textarea:focus { outline: none; border-color: var(--court); }
   inset: -0.5rem -0.6rem;
   z-index: -1;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--court) 11%, transparent);
+  background: color-mix(in srgb, var(--court) 15%, transparent);
 }
 .round h3 {
   margin: 0 0 0.75rem;
