@@ -34,7 +34,9 @@ export default function LiveControls({ room, tournament, theme, onRoomChange }) 
             : 'Connecting…'}
       </span>
       <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy link'}</button>
-      <button onClick={() => onRoomChange(null)}>Stop sharing</button>
+      <button onClick={() => onRoomChange(null)}>
+        Stop<span className="wide-only"> sharing</span>
+      </button>
       {manualCopy && (
         <Modal title="Share this link" onClose={() => setManualCopy(false)}>
           <p>Your browser blocked copying. Select the link and copy it yourself:</p>

@@ -60,7 +60,7 @@ export default function Host({ startAtHome = false }) {
                 guard('Clear results?', 'Every winner you picked will be removed.', 'Clear results', clearResults)
               }
             >
-              Clear results
+              Clear<span className="wide-only"> results</span>
             </button>
             <button
               className="primary"
@@ -73,7 +73,7 @@ export default function Host({ startAtHome = false }) {
                 )
               }
             >
-              New tournament
+              New<span className="wide-only"> tournament</span>
             </button>
           </>
         )}

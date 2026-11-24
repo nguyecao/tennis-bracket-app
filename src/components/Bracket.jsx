@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { BYE } from '../lib/bracket'
 import Match from './Match'
 
@@ -17,13 +18,25 @@ export default function Bracket({ title, rounds, onPick, seedOf }) {
   // (-1 when the bracket is finished.)
   const current = rounds.findIndex((matches) => matches.some((m) => m.winner === null))
 
+  // On narrow screens only a column or two fits. When the round in progress changes
+  // (or a viewer joins mid-tournament), scroll it into view if it's off screen.
+  const scroller = useRef(null)
+  useEffect(() => {
+    const box = scroller.current
+    const round = box?.children[current]
+    if (!round) return
+    const left = round.offsetLeft - box.offsetLeft
+    const visible = left >= box.scrollLeft && left + round.offsetWidth <= box.scrollLeft + box.clientWidth
+    if (!visible) box.scrollTo({ left: left - 12, behavior: 'smooth' })
+  }, [current])
+
   return (
     <section className="card">
       <h2>
         {title}
         {champion && champion !== BYE && <span className="champ">🏆 {champion}</span>}
       </h2>
-      <div className="bracket">
+      <div className="bracket" ref={scroller}>
         {rounds.map((matches, r) => (
           <div className={`round${r === current ? ' current' : ''}`} key={r}>
             <h3>{roundName(matches.length)}</h3>

@@ -32,6 +32,9 @@ export function useTheme({ persist = true } = {}) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme.id
     document.querySelector("link[rel='icon']")?.setAttribute('href', favicon(theme.emoji))
+    // Tint the phone's browser bar to match the page background
+    const bar = getComputedStyle(document.documentElement).getPropertyValue('--surround').trim()
+    document.querySelector("meta[name='theme-color']")?.setAttribute('content', bar)
     if (!persist) return
     try {
       localStorage.setItem(KEY, theme.id)

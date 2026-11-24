@@ -16,9 +16,10 @@ export default function Match({ match, onPick, seedOf }) {
             className={`player ${cls}`}
             disabled={!playable}
             onClick={() => onPick(id, p)}
+            title={real ? p : undefined}
           >
             {real && seedOf(p) && <span className="seed">{seedOf(p)}</span>}
-            {p === BYE ? 'BYE' : p || 'TBD'}
+            <span className="name">{p === BYE ? 'BYE' : p || 'TBD'}</span>
           </button>
         )
       })}

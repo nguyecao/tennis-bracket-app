@@ -74,7 +74,8 @@ export default function ThemePicker({ theme: current, onChange, hostTheme }) {
         aria-activedescendant={open ? `theme-${THEMES[active].id}` : undefined}
         onClick={toggle}
       >
-        {current.name}
+        <span className="dropdown-emoji" aria-hidden="true">{current.emoji}</span>
+        <span className="dropdown-label">{current.name}</span>
         <svg className="chevron" viewBox="0 0 12 8" aria-hidden="true">
           <path d="M1 1.5l5 5 5-5" />
         </svg>
