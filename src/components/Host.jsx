@@ -64,13 +64,16 @@ export default function Host({ startAtHome = false }) {
             </button>
             <button
               className="primary"
+              // Always confirm, even before any results are entered
               onClick={() =>
-                guard(
-                  'Start a new tournament?',
-                  'The current bracket and its results will be lost. Your player list is kept.',
-                  'Start new',
-                  newTournament
-                )
+                setConfirm({
+                  title: 'Start a new tournament?',
+                  message: hasResults
+                    ? 'The current bracket and its results will be lost. Your player list is kept.'
+                    : 'The current bracket will be closed. Your player list is kept.',
+                  label: 'Start new',
+                  action: newTournament,
+                })
               }
             >
               New<span className="wide-only"> tournament</span>
