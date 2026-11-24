@@ -157,9 +157,21 @@ textarea:focus { outline: none; border-color: var(--court); }
   display: flex;
   gap: var(--gap);
   overflow-x: auto;
-  padding-bottom: 0.5rem;
+  /* room for the current-round highlight, without shifting the bracket */
+  padding: 0.5rem 0.6rem;
+  margin: -0.5rem -0.6rem 0;
 }
-.round { display: flex; flex-direction: column; min-width: 190px; }
+.round { display: flex; flex-direction: column; min-width: 190px; position: relative; z-index: 0; }
+
+/* Faint background behind the round that still has matches to play */
+.round.current::before {
+  content: '';
+  position: absolute;
+  inset: -0.5rem -0.6rem;
+  z-index: -1;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--court) 11%, transparent);
+}
 .round h3 {
   margin: 0 0 0.75rem;
   font-size: 0.8rem;

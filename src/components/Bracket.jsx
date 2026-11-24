@@ -13,6 +13,9 @@ function roundName(matches) {
 // lines are drawn in CSS (see "Bracket lines" in App.css).
 export default function Bracket({ title, rounds, onPick, seedOf }) {
   const champion = rounds.at(-1)[0].winner
+  // The round in progress: the earliest round that still has an unplayed match.
+  // (-1 when the bracket is finished.)
+  const current = rounds.findIndex((matches) => matches.some((m) => m.winner === null))
 
   return (
     <section className="card">
@@ -22,7 +25,7 @@ export default function Bracket({ title, rounds, onPick, seedOf }) {
       </h2>
       <div className="bracket">
         {rounds.map((matches, r) => (
-          <div className="round" key={r}>
+          <div className={`round${r === current ? ' current' : ''}`} key={r}>
             <h3>{roundName(matches.length)}</h3>
             <div className="matches">
               {matches.map((m) => {
