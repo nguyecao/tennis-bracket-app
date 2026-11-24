@@ -3,6 +3,7 @@ import { makeSlots, shuffle, withPick, withTieOrder } from '../lib/bracket'
 import { makeGroups } from '../lib/groups'
 import { useSavedState } from '../lib/storage'
 import { useTheme } from '../lib/theme'
+import { today } from '../lib/dates'
 import Header from './Header'
 import Modal from './Modal'
 import LiveControls from './LiveControls'
@@ -23,11 +24,13 @@ export default function Host({ startAtHome = false }) {
     const players = state.mode === 'shuffle' ? shuffle(names) : names
     const common = {
       name: state.name.trim(),
+      date: state.date || today(), // not changed in setup = today
       created: Date.now(),
       seeds: state.mode === 'rank' ? players : null,
       winners: {},
     }
     update({
+      date: '', // the next tournament defaults to its own day again
       tournament:
         state.format === 'groups'
           ? {
@@ -46,6 +49,7 @@ export default function Host({ startAtHome = false }) {
   const pick = (id, name) => update({ tournament: withPick(tournament, id, name) })
 
   const rename = (name) => update({ tournament: { ...tournament, name } })
+  const redate = (date) => update({ tournament: { ...tournament, date } })
 
   // Host's order for group players still tied after head-to-head
   const reorder = (group, order) => update({ tournament: withTieOrder(tournament, group, order) })
@@ -100,11 +104,20 @@ export default function Host({ startAtHome = false }) {
       </Header>
 
       {showBracket ? (
-        <Tournament key={tournament.created} t={tournament} onPick={pick} onReorder={reorder} onRename={rename} />
+        <Tournament
+          key={tournament.created}
+          t={tournament}
+          onPick={pick}
+          onReorder={reorder}
+          onRename={rename}
+          onRedate={redate}
+          defaultName={theme.defaultName}
+        />
       ) : (
         <Setup
           state={state}
           update={update}
+          defaultName={theme.defaultName}
           onGenerate={(names) =>
             guard(
               'Replace your bracket?',

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
+import { formatDay, dayFromTimestamp, isDay } from '../lib/dates'
 
 export const DEFAULT_NAME = 'Tennis Tournament'
 const MAX_LENGTH = 80
 const BASE_TITLE = document.title // e.g. "TENNIS.live" from index.html
 
-// Tournament name + date above the bracket. Falls back to DEFAULT_NAME when no name was given.
-// onRename (host only): click the name to edit it in place.
-export default function TournamentTitle({ name, created, onRename }) {
-  const shown = name?.trim() || DEFAULT_NAME
+// Tournament name + date above the bracket. With no name given it shows defaultName
+// (the theme's name, e.g. "Wimbledon"), or DEFAULT_NAME on the Classic theme.
+// onRename / onRedate (host only): click the name or the date to change it in place.
+export default function TournamentTitle({ name, date, created, onRename, onRedate, defaultName = DEFAULT_NAME }) {
+  const shown = name?.trim() || defaultName
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
 
@@ -19,9 +21,9 @@ export default function TournamentTitle({ name, created, onRename }) {
     }
   }, [shown])
 
-  const date = created
-    ? new Date(created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-    : null
+  // The tournament's date; older tournaments fall back to the day they were created
+  const day = isDay(date) ? date : created ? dayFromTimestamp(created) : null
+  const [editingDate, setEditingDate] = useState(false)
 
   function save() {
     onRename(draft.trim())
@@ -36,7 +38,7 @@ export default function TournamentTitle({ name, created, onRename }) {
           autoFocus
           value={draft}
           maxLength={MAX_LENGTH}
-          placeholder={DEFAULT_NAME}
+          placeholder={defaultName}
           aria-label="Tournament name"
           onChange={(e) => setDraft(e.target.value)}
           onBlur={save}
@@ -63,7 +65,29 @@ export default function TournamentTitle({ name, created, onRename }) {
           )}
         </h2>
       )}
-      {date && <p>{date}</p>}
+      {editingDate ? (
+        <input
+          type="date"
+          className="date-input"
+          aria-label="Tournament date"
+          autoFocus
+          value={day || ''}
+          onChange={(e) => isDay(e.target.value) && onRedate(e.target.value)}
+          onBlur={() => setEditingDate(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setEditingDate(false)}
+        />
+      ) : onRedate ? (
+        <button
+          className="date-button"
+          title="Change date"
+          aria-label={`Date: ${day ? formatDay(day) : 'none'}. Change date`}
+          onClick={() => setEditingDate(true)}
+        >
+          {day ? formatDay(day) : 'Add date'} <span aria-hidden="true">✎</span>
+        </button>
+      ) : (
+        day && <p>{formatDay(day)}</p>
+      )}
     </div>
   )
 }

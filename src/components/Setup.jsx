@@ -2,12 +2,12 @@ import { useRef } from 'react'
 import { parseNames, nameError } from '../lib/names'
 import { planGroups, GROUP_SIZES, RECOMMENDED_GROUP_SIZE, MAX_SINGLE_GROUP } from '../lib/groups'
 import JoinRoom from './JoinRoom'
-import { DEFAULT_NAME } from './TournamentTitle'
+import { today, isDay } from '../lib/dates'
 
 // Name entry + options. Calls onGenerate(names) when the form is valid.
 // onResume (optional): shown when a saved bracket exists but we're on the home page.
-export default function Setup({ state, update, onGenerate, onResume }) {
-  const { name, text, mode, consolation, format, groupSize, advance } = state
+export default function Setup({ state, update, onGenerate, onResume, defaultName }) {
+  const { name, date, text, mode, consolation, format, groupSize, advance } = state
   const names = parseNames(text)
   const groupInfo = format === 'groups' ? describeGroups(names.length, groupSize, advance) : null
   const error = nameError(names) || groupInfo?.error || ''
@@ -25,17 +25,31 @@ export default function Setup({ state, update, onGenerate, onResume }) {
           ← Back to your bracket
         </button>
       )}
-      <label htmlFor="tournament-name">
-        Tournament name <span className="muted">(optional)</span>
-      </label>
-      <input
-        id="tournament-name"
-        className="name-input"
-        value={name}
-        maxLength={80}
-        placeholder={DEFAULT_NAME}
-        onChange={(e) => update({ name: e.target.value })}
-      />
+      <div className="name-date">
+        <div>
+          <label htmlFor="tournament-name">
+            Tournament name <span className="muted">(optional)</span>
+          </label>
+          <input
+            id="tournament-name"
+            className="name-input"
+            value={name}
+            maxLength={80}
+            placeholder={defaultName}
+            onChange={(e) => update({ name: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="tournament-date">Date</label>
+          <input
+            id="tournament-date"
+            type="date"
+            className="name-input"
+            value={date || today()}
+            onChange={(e) => update({ date: isDay(e.target.value) ? e.target.value : '' })}
+          />
+        </div>
+      </div>
 
       <label>
         Players <span className="muted">({names.length} / 128, one per line)</span>

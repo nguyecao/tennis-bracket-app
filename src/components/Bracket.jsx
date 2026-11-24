@@ -1,20 +1,15 @@
 import { useEffect, useRef } from 'react'
-import { BYE } from '../lib/bracket'
+import { BYE, roundName } from '../lib/bracket'
 import Match from './Match'
 
-function roundName(matches) {
-  if (matches === 1) return 'Final'
-  if (matches === 2) return 'Semifinals'
-  if (matches === 4) return 'Quarterfinals'
-  return `Round of ${matches * 2}`
-}
 
 // Each match sits in a "slot" that takes an equal share of the column's height, so a
 // match always lines up halfway between the two matches that feed it. The connector
 // lines are drawn in CSS (see "Bracket lines" in App.css).
 // labels (optional): placeholder text for first-round spots still waiting on a group.
 // waiting: the draw can't start yet (group stage still running), so no round is "in progress".
-export default function Bracket({ title, rounds, labels, onPick, seedOf, waiting = false }) {
+// followed: players highlighted with ★ (shown wherever they appear).
+export default function Bracket({ title, rounds, labels, onPick, seedOf, followed, waiting = false }) {
   const champion = rounds.at(-1)[0].winner
   // The round in progress: the earliest round that still has an unplayed match.
   // (-1 when the bracket is finished.)
@@ -22,6 +17,22 @@ export default function Bracket({ title, rounds, labels, onPick, seedOf, waiting
 
   // On narrow screens only a column or two fits. When the round in progress changes
   // (or a viewer joins mid-tournament), scroll it into view if it's off screen.
+  // Which matches got a winner since the last update, so only those animate
+  // (nothing animates on first load or when switching tabs).
+  const isReal = (p) => p && p !== BYE
+  // Remembered until the results change again, so unrelated re-renders (e.g. the viewer
+  // count updating) don't cut an animation short.
+  const decidedIds = rounds.flat().filter((m) => isReal(m.winner)).map((m) => m.id)
+  const key = decidedIds.join(',')
+  const track = useRef(null)
+  if (!track.current) {
+    track.current = { key, ids: new Set(decidedIds), fresh: new Set() }
+  } else if (track.current.key !== key) {
+    const before = track.current.ids
+    track.current = { key, ids: new Set(decidedIds), fresh: new Set(decidedIds.filter((id) => !before.has(id))) }
+  }
+  const justDecided = track.current.fresh
+
   const scroller = useRef(null)
   useEffect(() => {
     const box = scroller.current
@@ -44,18 +55,25 @@ export default function Bracket({ title, rounds, labels, onPick, seedOf, waiting
             <h3>{roundName(matches.length)}</h3>
             <div className="matches">
               {matches.map((m, i) => {
-                // Highlight the connector lines once a winner has moved along them
-                const decided = m.winner && m.winner !== BYE
-                const filled = r > 0 && m.a != null && m.b != null
+                // Winner's path: the elbow out of a decided match, and the line into the
+                // next match once a winner has arrived there
+                const decided = isReal(m.winner)
+                const feeders = r > 0 ? [rounds[r - 1][2 * i], rounds[r - 1][2 * i + 1]] : []
+                const arrived = feeders.some((f) => f && isReal(f.winner))
+                // Animate along the path when a winner was just picked
+                const animateOut = justDecided.has(m.id)
+                const arriving = feeders.map((f) => f && justDecided.has(f.id))
+                const last = r === rounds.length - 1
                 return (
-                  <div
-                    key={m.id}
-                    className={`slot${decided ? ' decided' : ''}${filled ? ' filled' : ''}`}
-                  >
+                  <div key={m.id} className="slot">
+                    {decided && !last && <span className={`path-out${animateOut ? ' draw' : ''}`} />}
+                    {arrived && <span className={`path-in${arriving.some(Boolean) ? ' draw' : ''}`} />}
                     <Match
                       match={m}
                       onPick={onPick}
                       seedOf={seedOf}
+                      arriving={arriving}
+                      followed={followed}
                       labels={r === 0 && labels ? [labels[2 * i], labels[2 * i + 1]] : null}
                     />
                   </div>

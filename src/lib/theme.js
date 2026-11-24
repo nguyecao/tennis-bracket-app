@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 
 // Color themes. Colors live in App.css under [data-theme='...'].
+// defaultName: what an unnamed tournament is called on this theme.
 export const THEMES = [
-  { id: 'classic', name: 'Classic', emoji: '🎾' },
-  { id: 'wimbledon', name: 'Wimbledon', emoji: '🍓' }, // strawberries & cream
-  { id: 'australian-open', name: 'Australian Open', emoji: '🦘' },
-  { id: 'us-open', name: 'US Open', emoji: '🗽' }, // New York
-  { id: 'roland-garros', name: 'Roland Garros', emoji: '🥐' }, // Paris
+  { id: 'classic', name: 'Classic', emoji: '🎾', defaultName: 'Tennis Tournament' },
+  { id: 'wimbledon', name: 'Wimbledon', emoji: '🍓', defaultName: 'Wimbledon' }, // strawberries & cream
+  { id: 'australian-open', name: 'Australian Open', emoji: '🦘', defaultName: 'Australian Open' },
+  { id: 'us-open', name: 'US Open', emoji: '🗽', defaultName: 'US Open' }, // New York
+  { id: 'roland-garros', name: 'Roland Garros', emoji: '🥐', defaultName: 'Roland Garros' }, // Paris
 ]
 
 const KEY = 'tennis-bracket-theme'
-const findTheme = (id) => THEMES.find((t) => t.id === id) || THEMES[0]
+export const findTheme = (id) => THEMES.find((t) => t.id === id) || THEMES[0]
 
 function saved() {
   try {

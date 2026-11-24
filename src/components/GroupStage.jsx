@@ -1,8 +1,9 @@
+import { useLayoutEffect, useRef } from 'react'
 import Match from './Match'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
 // All groups: standings table + round-robin matches for each.
-export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, onShowMain }) {
+export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, followed, onShowMain }) {
   const allDone = groups.every((g) => g.done)
   // One group and nobody goes on: pure round robin, the group winner is the champion
   // (not while players are still level at the top and the host hasn't ordered them)
@@ -46,6 +47,7 @@ export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReo
             group={g}
             advance={pools ? 0 : hasMainDraw ? advance : 1}
             word={word}
+            followed={followed}
             onPick={onPick}
             onReorder={onReorder}
             seedOf={seedOf}
@@ -56,9 +58,35 @@ export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReo
   )
 }
 
+// Smoothly slide table rows to their new position whenever the order changes
+// (tie arrows, or a result that changes the standings). Returns a ref setter per row.
+function useRowSlide(order) {
+  const rows = useRef(new Map())
+  const before = useRef(new Map())
+  useLayoutEffect(() => {
+    const now = new Map()
+    rows.current.forEach((el, key) => now.set(key, el.offsetTop))
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (!calm) {
+      now.forEach((top, key) => {
+        const was = before.current.get(key)
+        if (was != null && was !== top) {
+          rows.current.get(key).animate(
+            [{ transform: `translateY(${was - top}px)` }, { transform: 'none' }],
+            { duration: 320, easing: 'cubic-bezier(.2,.7,.3,1)' }
+          )
+        }
+      })
+    }
+    before.current = now
+  }, [order])
+  return (key) => (el) => (el ? rows.current.set(key, el) : rows.current.delete(key))
+}
+
 // advance: how many rows to mark as going through (0 in pool play, where everyone does)
-function GroupCard({ group, advance, word, onPick, onReorder, seedOf }) {
+function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }) {
   const { table, rounds, played, matches, done, tiesSet } = group
+  const rowRef = useRowSlide(table.map((r) => r.name).join('|'))
 
   // Swap a still-tied player with the one above/below, saving the new order for this group
   function move(i, dir) {
@@ -99,7 +127,11 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf }) {
         </thead>
         <tbody>
           {table.map((r, i) => (
-            <tr key={r.name} className={i < advance ? 'advancing' : ''}>
+            <tr
+              key={r.name}
+              ref={rowRef(r.name)}
+              className={`${i < advance ? 'advancing' : ''}${followed?.has(r.name) ? ' followed' : ''}`}
+            >
               <td title={showEquals(i) ? 'Tied' : undefined}>{showEquals(i) ? '=' : i + 1}</td>
               <td className="player-col" title={r.name}>
                 <div className="player-cell">
@@ -112,11 +144,29 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf }) {
               <td>{r.l}</td>
               {onReorder && done && (
                 <td className="tie-arrows">
-                  {tiedWith(i, i - 1) && (
-                    <button aria-label={`Move ${r.name} up`} onClick={() => move(i, -1)}>▲</button>
+                  {/* Both spots are always there so arrows line up in columns. A tied player already
+                      at the top (or bottom) of their tie gets a faded, disabled arrow. */}
+                  {tied(i) ? (
+                    <button
+                      aria-label={`Move ${r.name} up`}
+                      disabled={!tiedWith(i, i - 1)}
+                      onClick={() => move(i, -1)}
+                    >
+                      ▲
+                    </button>
+                  ) : (
+                    <span className="arrow-spot" />
                   )}
-                  {tiedWith(i, i + 1) && (
-                    <button aria-label={`Move ${r.name} down`} onClick={() => move(i, 1)}>▼</button>
+                  {tied(i) ? (
+                    <button
+                      aria-label={`Move ${r.name} down`}
+                      disabled={!tiedWith(i, i + 1)}
+                      onClick={() => move(i, 1)}
+                    >
+                      ▼
+                    </button>
+                  ) : (
+                    <span className="arrow-spot" />
                   )}
                 </td>
               )}
@@ -130,7 +180,7 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf }) {
           <div key={r}>
             <h4>Round {r + 1}</h4>
             {pairs.map((m) => (
-              <Match key={m.id} match={m} onPick={onPick} seedOf={seedOf} />
+              <Match key={m.id} match={m} onPick={onPick} seedOf={seedOf} followed={followed} />
             ))}
           </div>
         ))}

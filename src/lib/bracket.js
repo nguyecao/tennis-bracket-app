@@ -11,6 +11,14 @@ export function seedOrder(size) {
   return order
 }
 
+// "Final", "Semifinals", "Quarterfinals", "Round of 16"... from the number of matches in a round
+export function roundName(matches) {
+  if (matches === 1) return 'Final'
+  if (matches === 2) return 'Semifinals'
+  if (matches === 4) return 'Quarterfinals'
+  return `Round of ${matches * 2}`
+}
+
 export function shuffle(list) {
   const a = [...list]
   for (let i = a.length - 1; i > 0; i--) {
@@ -138,6 +146,7 @@ export function isTournament(t) {
   if (!t || typeof t !== 'object' || !t.winners || typeof t.winners !== 'object') return false
   if (t.seeds != null && !isNameList(t.seeds)) return false
   if (t.name != null && (typeof t.name !== 'string' || t.name.length > 100)) return false
+  if (t.date != null && !/^\d{4}-\d{2}-\d{2}$/.test(t.date)) return false
 
   if (t.format === 'groups') {
     return (

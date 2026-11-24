@@ -6,6 +6,7 @@ import { GROUP_SIZES } from './groups'
 const KEY = 'tennis-bracket'
 const START = {
   name: '', // tournament name; empty = default name
+  date: '', // "YYYY-MM-DD"; empty = today
   text: '',
   mode: 'shuffle',
   consolation: false,
@@ -22,6 +23,7 @@ function load() {
     if (!isTournament(saved.tournament)) saved.tournament = null
     if (typeof saved.text !== 'string') saved.text = ''
     if (typeof saved.name !== 'string') saved.name = ''
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(saved.date)) saved.date = ''
     // Settings from an older version, or edited by hand, fall back to defaults
     const allowed = (value, options, fallback) => (options.includes(value) ? value : fallback)
     saved.mode = allowed(saved.mode, ['shuffle', 'rank'], START.mode)

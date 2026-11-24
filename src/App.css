@@ -11,6 +11,7 @@
   --line: #ffffff;
   --ink: #1b2a22;
   --path: var(--court); /* winner lines (highlight is too light on white) */
+  --follow: #ff3d8b; /* highlighted players: hot pink: nothing else on this theme is pink */
 }
 [data-theme='wimbledon'] {
   /* Official: green Pantone 349 C (#046A38), purple Pantone 268 C (#582C83).
@@ -24,6 +25,7 @@
   --danger: #b3261e;
   --line: #ffffff;
   --ink: #1c1b22;
+  --follow: #ffd400; /* highlighted players: bright yellow: stands apart from the green and purple */
 }
 [data-theme='australian-open'] {
   --surround: #0a2f6b;
@@ -36,6 +38,7 @@
   --line: #ffffff;
   --ink: #0e1a2b;
   --path: var(--court); /* winner lines (highlight is too light on white) */
+  --follow: #ff8a1f; /* highlighted players: orange: the opposite of the blues */
 }
 [data-theme='us-open'] {
   /* Primary: blue. Secondary: yellow. Accent: white. */
@@ -49,6 +52,7 @@
   --line: #ffffff;
   --ink: #14213d;
   --path: var(--court); /* winner lines (highlight is too light on white) */
+  --follow: #ff3d8b; /* highlighted players: hot pink: clear against both the blue and the yellow */
 }
 [data-theme='roland-garros'] {
   --surround: #a84b23;
@@ -60,6 +64,7 @@
   --danger: #b3261e;
   --line: #ffffff;
   --ink: #2a1a12;
+  --follow: #2ad4ff; /* highlighted players: bright cyan: the opposite of clay */
 }
 
 :root {
@@ -263,9 +268,35 @@ textarea {
   border-top: 2px solid var(--bracket-line);
 }
 
-/* A winner's path is drawn in the theme's highlight color */
-.round .slot.decided::after,
-.round .slot.filled::before { border-color: var(--path, var(--ball)); }
+/* A winner's path: the same shapes in the theme's highlight color, laid over the grey lines */
+.path-out,
+.path-in {
+  position: absolute;
+  z-index: 1;
+  width: calc(var(--gap) / 2);
+  border: 0 solid var(--path, var(--ball));
+  pointer-events: none;
+}
+.path-out { right: calc(var(--gap) / -2); border-right-width: 2px; }
+.slot:nth-child(odd) > .path-out { top: 50%; bottom: 0; border-top-width: 2px; border-top-right-radius: 8px; }
+.slot:nth-child(even) > .path-out { top: 0; bottom: 50%; border-bottom-width: 2px; border-bottom-right-radius: 8px; }
+.path-in { left: calc(var(--gap) / -2); top: 50%; border-top-width: 2px; }
+
+/* When a winner is picked: draw the elbow out of the match, then the line into the next
+   match, then the player's name slides into place */
+.slot:nth-child(odd) > .path-out.draw { animation: draw-down 0.3s ease-out both; }
+.slot:nth-child(even) > .path-out.draw { animation: draw-up 0.3s ease-out both; }
+.path-in.draw { animation: draw-right 0.2s ease-out 0.28s both; }
+.player.arrive .name, .player.arrive .seed { animation: arrive 0.35s ease-out 0.42s both; }
+
+@keyframes draw-down { from { clip-path: inset(0 100% 100% 0); } to { clip-path: inset(0); } }
+@keyframes draw-up { from { clip-path: inset(100% 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes draw-right { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes arrive { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .path-out.draw, .path-in.draw, .player.arrive .name, .player.arrive .seed { animation: none; }
+}
 
 .match {
   border: 2px solid var(--court);
@@ -468,6 +499,7 @@ button.resume {
 
 /* ---------- Phones and small screens ---------- */
 .dropdown-emoji { display: none; }
+.narrow-only { display: none; }
 
 /* Bigger tap targets on touch screens */
 @media (pointer: coarse) {
@@ -601,14 +633,23 @@ button.resume {
 .standings tr.advancing td:first-child { box-shadow: inset 4px 0 0 var(--path, var(--ball)); font-weight: 700; }
 .standings .q { margin-left: auto; color: var(--court); font-weight: 700; }
 .tie-arrows { white-space: nowrap; }
+/* Fixed-size spots: every ▲ sits in one column and every ▼ in the next */
+.tie-arrows button,
+.tie-arrows .arrow-spot {
+  display: inline-block;
+  width: 1.3rem;
+  padding: 0.15rem 0;
+  text-align: center;
+  vertical-align: middle;
+}
 .tie-arrows button {
   border: 0;
-  padding: 0.15rem 0.25rem;
   color: var(--court);
   font-size: 0.75rem;
   border-radius: 6px;
 }
-.tie-arrows button:hover { background: #eef2ef; }
+.tie-arrows button:not(:disabled):hover { background: #eef2ef; }
+.tie-arrows button:disabled { opacity: 0.25; cursor: default; }
 
 .group-matches { display: grid; gap: 0.6rem; }
 .group-matches h4 {
@@ -621,8 +662,16 @@ button.resume {
 .group-matches .match + .match { margin-top: 0.4rem; }
 
 @media (max-width: 600px) {
-  .tabs { display: flex; }
-  .tabs button { flex: 1; justify-content: center; padding: 0.45rem 0.5rem; }
+  .narrow-only { display: inline; }
+  .tabs { display: flex; max-width: 100%; overflow-x: auto; }
+  .tabs button {
+    flex: 1 0 auto;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
   .groups { grid-template-columns: 1fr; }
   .group { padding: 0.75rem; }
 }
@@ -684,3 +733,95 @@ button.resume {
   background: color-mix(in srgb, var(--ball) 30%, #fff);
 }
 .notice-bar.own-room { color: var(--line); background: rgba(255, 255, 255, 0.12); }
+
+/* ---------- Highlighted players (★) ---------- */
+/* Each theme sets --follow to a color that contrasts with all of its own colors.
+   The ring covers the match box's own border and the divider line too, so the
+   player's whole box is outlined right to its outer edge. */
+.match { overflow: visible; }
+.match > .player:first-child { border-radius: 6px 6px 0 0; }
+.match > .player:last-child { border-radius: 0 0 6px 6px; }
+.player.followed {
+  position: relative;
+  z-index: 1; /* sit over the neighbouring player and the box border */
+  border-color: var(--follow); /* the divider line, for the bottom player */
+  box-shadow: 0 0 0 2px var(--follow), inset 0 0 0 1px var(--follow);
+}
+/* Bottom player: the divider line above it already forms the top of the ring, so trim the
+   outer ring off the top edge. Otherwise that edge would be thicker than the other three. */
+.match > .player + .player.followed { clip-path: inset(0 -2px -2px -2px round 0 0 8px 8px); }
+/* On white backgrounds a slightly deeper shade, so light colors like yellow stay readable */
+:root { --follow-ink: color-mix(in srgb, var(--follow) 78%, #000); }
+.player.followed .name::before { content: '★ '; }
+.standings tr.followed td { background: color-mix(in srgb, var(--follow) 10%, #fff); }
+.standings tr.followed .name::before { content: '★ '; color: var(--follow-ink); }
+
+/* ---------- Players tab ---------- */
+.players-tools { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.players-tools .name-input { flex: 1; min-width: 200px; margin: 0; }
+.text-button { border: 0; padding: 0.3rem 0.2rem; color: var(--court); font-weight: 600; text-decoration: underline; }
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+}
+.player-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid #e2e8e4;
+  border-radius: 12px;
+}
+@media (hover: hover) { .player-row:hover { border-color: #cfd8d3; background: #f7f9f8; } }
+.player-row.followed { border-color: var(--follow-ink); background: color-mix(in srgb, var(--follow) 10%, #fff); }
+.star { font-size: 1.25rem; line-height: 1; color: #b8c4bd; width: 1.25rem; text-align: center; }
+.player-row.followed .star { color: var(--follow-ink); }
+.pl-main { flex: 1; min-width: 0; display: grid; gap: 0.15rem; }
+.pl-name { display: flex; align-items: center; gap: 0.4rem; font-weight: 600; min-width: 0; }
+.pl-name .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-name .seed { background: #eef2ef; color: var(--ink); }
+.pl-status { font-size: 0.85rem; color: #5b6b62; }
+.pl-status.alive { color: var(--court); font-weight: 600; }
+.pl-status.out { color: #8a9a91; }
+.pl-status.champ-line { color: var(--ink); font-weight: 700; }
+.pl-record { font-variant-numeric: tabular-nums; font-weight: 700; color: #5b6b62; }
+
+/* Tournament name + date in setup */
+.name-date { display: grid; grid-template-columns: 1fr auto; gap: 0 0.75rem; }
+.name-date label { font-weight: 600; }
+.name-date input[type='date'] { min-width: 11rem; }
+@media (max-width: 600px) { .name-date { grid-template-columns: 1fr; } }
+
+/* Date under the tournament name (host can tap it to change) */
+.date-button {
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.4rem;
+  margin-left: -0.4rem;
+  border: 0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--line);
+  opacity: 0.75;
+}
+.date-button span { font-size: 0.85em; opacity: 0.8; }
+.date-button:hover, .date-button:focus-visible { opacity: 1; background: rgba(255, 255, 255, 0.12); }
+.date-input {
+  margin-top: 0.2rem;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  color: var(--line);
+  background: rgba(255, 255, 255, 0.1);
+  color-scheme: dark; /* white calendar icon on the dark header */
+}

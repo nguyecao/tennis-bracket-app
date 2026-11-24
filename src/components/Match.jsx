@@ -2,7 +2,9 @@ import { BYE } from '../lib/bracket'
 
 // One match: two player buttons. Clickable only when both players are known.
 // labels (optional): text for empty spots, e.g. "Group A · 1st" in a Main Draw fed by groups.
-export default function Match({ match, onPick, seedOf, labels }) {
+// arriving (optional): [top, bottom] — true for a player who just advanced into this match.
+// followed (optional): Set of highlighted players.
+export default function Match({ match, onPick, seedOf, labels, arriving, followed }) {
   const { id, a, b, winner } = match
   const playable = a && b && a !== BYE && b !== BYE && !!onPick
 
@@ -14,7 +16,7 @@ export default function Match({ match, onPick, seedOf, labels }) {
         return (
           <button
             key={k}
-            className={`player ${cls}`}
+            className={`player ${cls}${real && arriving?.[k] ? ' arrive' : ''}${real && followed?.has(p) ? ' followed' : ''}`}
             disabled={!playable}
             onClick={() => onPick(id, p)}
             title={real ? p : undefined}

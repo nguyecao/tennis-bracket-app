@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useViewer } from '../lib/live'
-import { useTheme } from '../lib/theme'
+import { useTheme, findTheme } from '../lib/theme'
 import { savedRoom } from '../lib/storage'
 import Header from './Header'
 import Tournament from './Tournament'
@@ -40,7 +40,12 @@ export default function Viewer({ code, onLeave, onHost }) {
       )}
 
       {tournament ? (
-        <Tournament key={tournament.created} t={tournament} />
+        // An unnamed tournament is named after the host's theme, so everyone sees the same name
+        <Tournament
+          key={tournament.created}
+          t={tournament}
+          defaultName={findTheme(hostTheme ?? theme.id).defaultName}
+        />
       ) : (
         <p className="notice">
           {tournament === null ? 'The host is setting up a new bracket…' : 'Waiting for the host…'}
