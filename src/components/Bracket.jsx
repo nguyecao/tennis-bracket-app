@@ -12,7 +12,8 @@ function roundName(matches) {
 // Each match sits in a "slot" that takes an equal share of the column's height, so a
 // match always lines up halfway between the two matches that feed it. The connector
 // lines are drawn in CSS (see "Bracket lines" in App.css).
-export default function Bracket({ title, rounds, onPick, seedOf }) {
+// labels (optional): placeholder text for first-round spots still waiting on a group.
+export default function Bracket({ title, rounds, labels, onPick, seedOf }) {
   const champion = rounds.at(-1)[0].winner
   // The round in progress: the earliest round that still has an unplayed match.
   // (-1 when the bracket is finished.)
@@ -41,7 +42,7 @@ export default function Bracket({ title, rounds, onPick, seedOf }) {
           <div className={`round${r === current ? ' current' : ''}`} key={r}>
             <h3>{roundName(matches.length)}</h3>
             <div className="matches">
-              {matches.map((m) => {
+              {matches.map((m, i) => {
                 // Highlight the connector lines once a winner has moved along them
                 const decided = m.winner && m.winner !== BYE
                 const filled = r > 0 && m.a != null && m.b != null
@@ -50,7 +51,12 @@ export default function Bracket({ title, rounds, onPick, seedOf }) {
                     key={m.id}
                     className={`slot${decided ? ' decided' : ''}${filled ? ' filled' : ''}`}
                   >
-                    <Match match={m} onPick={onPick} seedOf={seedOf} />
+                    <Match
+                      match={m}
+                      onPick={onPick}
+                      seedOf={seedOf}
+                      labels={r === 0 && labels ? [labels[2 * i], labels[2 * i + 1]] : null}
+                    />
                   </div>
                 )
               })}

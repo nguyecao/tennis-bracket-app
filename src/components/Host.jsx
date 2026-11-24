@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { makeSlots, shuffle, withPick } from '../lib/bracket'
+import { makeGroups } from '../lib/groups'
 import { useSavedState } from '../lib/storage'
 import { useTheme } from '../lib/theme'
 import Header from './Header'
@@ -20,18 +21,35 @@ export default function Host({ startAtHome = false }) {
   function generate(names) {
     setHome(false)
     const players = state.mode === 'shuffle' ? shuffle(names) : names
+    const common = {
+      name: state.name.trim(),
+      created: Date.now(),
+      seeds: state.mode === 'rank' ? players : null,
+      winners: {},
+    }
     update({
-      tournament: {
-        slots: makeSlots(players),
-        seeds: state.mode === 'rank' ? players : null,
-        consolation: state.consolation && players.length >= 4,
-        winners: {},
-      },
+      tournament:
+        state.format === 'groups'
+          ? {
+              ...common,
+              format: 'groups',
+              groups: makeGroups(players, state.groupSize),
+              advance: state.advance,
+              consolation: state.consolation,
+              tieOrder: {},
+            }
+          : { ...common, slots: makeSlots(players), consolation: state.consolation && players.length >= 4 },
     })
   }
 
   // Click a player to make them the winner; click again to undo.
   const pick = (id, name) => update({ tournament: withPick(tournament, id, name) })
+
+  const rename = (name) => update({ tournament: { ...tournament, name } })
+
+  // Host's order for group players still tied after head-to-head
+  const reorder = (group, order) =>
+    update({ tournament: { ...tournament, tieOrder: { ...tournament.tieOrder, [group]: order } } })
 
   // Ask before throwing away entered results.
   const hasResults = tournament && Object.keys(tournament.winners).length > 0
@@ -83,7 +101,7 @@ export default function Host({ startAtHome = false }) {
       </Header>
 
       {showBracket ? (
-        <Tournament t={tournament} onPick={pick} />
+        <Tournament key={tournament.created} t={tournament} onPick={pick} onReorder={reorder} onRename={rename} />
       ) : (
         <Setup
           state={state}

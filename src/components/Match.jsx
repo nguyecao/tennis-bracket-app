@@ -1,7 +1,8 @@
 import { BYE } from '../lib/bracket'
 
 // One match: two player buttons. Clickable only when both players are known.
-export default function Match({ match, onPick, seedOf }) {
+// labels (optional): text for empty spots, e.g. "Group A · 1st" in a Main Draw fed by groups.
+export default function Match({ match, onPick, seedOf, labels }) {
   const { id, a, b, winner } = match
   const playable = a && b && a !== BYE && b !== BYE && !!onPick
 
@@ -19,7 +20,7 @@ export default function Match({ match, onPick, seedOf }) {
             title={real ? p : undefined}
           >
             {real && seedOf(p) && <span className="seed">{seedOf(p)}</span>}
-            <span className="name">{p === BYE ? 'BYE' : p || 'TBD'}</span>
+            <span className="name">{p === BYE ? 'BYE' : p || labels?.[k] || 'TBD'}</span>
           </button>
         )
       })}

@@ -27,7 +27,7 @@ export default function Viewer({ code, onLeave }) {
       </Header>
 
       {tournament ? (
-        <Tournament t={tournament} />
+        <Tournament key={tournament.created} t={tournament} />
       ) : (
         <p className="notice">
           {tournament === null ? 'The host is setting up a new bracket…' : 'Waiting for the host…'}

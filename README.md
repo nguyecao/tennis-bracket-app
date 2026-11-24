@@ -3,6 +3,7 @@
 Enter 2–128 names and generate a single-elimination bracket. No database — everything is saved in your browser's localStorage.
 
 - **Shuffle** randomizes the draw. **Rank** seeds players in the order you typed them (top seeds get any byes).
+- **Group stage** (optional): players are split into round-robin groups (4 per group recommended); the top 1–3 from each group advance into the knockout Main Draw. Choose "One group" + "Top 1" for a plain round robin. Choose "Everyone" under Advancing for **pool play for seeding**: nobody is eliminated, and pool results decide each player's Main Draw seed. Hosts and viewers switch between **Group Stage** and **Main Draw** tabs.
 - **Consolation bracket** (optional) collects every player who loses their first match.
 - Click a player to advance them; click again to undo.
 - Pick a theme (Classic, Wimbledon, Australian Open, US Open, Roland Garros) from the menu in the header. Each browser remembers its own choice.
@@ -38,11 +39,13 @@ src/
     LiveControls.jsx      Go live / room code / Copy link / Stop sharing
     Setup.jsx             name list + shuffle/rank + consolation options
     JoinRoom.jsx          "enter a room code" box
-    Tournament.jsx        main draw + consolation
+    Tournament.jsx        Group Stage / Main Draw tabs, main draw + consolation
+    GroupStage.jsx        group standings tables + round-robin matches
     Bracket.jsx           one bracket: rounds and champion
     Match.jsx             one match: two clickable players
   lib/
     bracket.js            pure bracket logic (seeding, byes, rounds, consolation)
+    groups.js             group stage: splitting groups, schedules, standings, qualifiers
     live.js               PeerJS rooms: useHost / useViewer hooks
     names.js              parse + validate the name list
     storage.js            useSavedState: state saved to localStorage

@@ -3,13 +3,24 @@ import { isTournament } from './bracket'
 
 // The host's state (names, options, bracket, room code), saved in localStorage.
 const KEY = 'tennis-bracket'
-const START = { text: '', mode: 'shuffle', consolation: false, tournament: null, room: null }
+const START = {
+  name: '', // tournament name; empty = default name
+  text: '',
+  mode: 'shuffle',
+  consolation: false,
+  format: 'knockout', // or 'groups'
+  groupSize: 4, // a number, or 'all' for one group
+  advance: 2,
+  tournament: null,
+  room: null,
+}
 
 function load() {
   try {
     const saved = { ...START, ...JSON.parse(localStorage.getItem(KEY)) }
     if (!isTournament(saved.tournament)) saved.tournament = null
     if (typeof saved.text !== 'string') saved.text = ''
+    if (typeof saved.name !== 'string') saved.name = ''
     return saved
   } catch {
     return START

@@ -6,7 +6,7 @@ import ThemePicker from './ThemePicker'
 export default function Header({ theme, onThemeChange, hostTheme, children }) {
   return (
     <header>
-      <h1>{theme.emoji} Tennis Bracket</h1>
+      <h1>{theme.emoji} TENNIS.live</h1>
       {/* Buttons + theme move as one group, so they wrap below the title together */}
       <div className="controls">
         <div className="actions">{children}</div>
