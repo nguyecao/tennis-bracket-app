@@ -76,6 +76,8 @@ export default function Host({ startAtHome = false }) {
             tournament={tournament}
             theme={theme.id}
             onRoomChange={(room) => update({ room })}
+            cheers={state.cheers}
+            onCheersChange={(cheers) => update({ cheers })}
           />
         )}
         {showBracket && (

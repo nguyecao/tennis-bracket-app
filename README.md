@@ -8,6 +8,7 @@ Enter 2–128 names and generate a single-elimination bracket. No database — e
 - Click a player to advance them; click again to undo.
 - **Tournament name and date** are optional and editable on the bracket (✎). With no name, the theme's name is used.
 - **Keep score** (optional): tap "+ Add score" under a match and enter any number of sets (1–5) in any format; the winner is filled in automatically. Turn on **Use scores to break ties in groups** to rank tied players by set difference, then game difference (after head-to-head).
+- **Cheers** (live rooms): viewers and the host tap the 👏 button to send 👏 🔥 😮 🎉 or the theme's emoji, which float up everyone's screen. Each person gets 5 quick cheers, then one every 2 seconds (the host enforces this too). The host can switch cheers off with the Cheers switch.
 - **Download PDF** (right of the tabs): downloads a printable draw sheet of the bracket as it stands, with group tables and results. Hosts and viewers can both download it.
 - **Players** tab: every player's status and record. Tap ★ to highlight players across the bracket (saved on this device only).
 - Pick a theme (Classic, Wimbledon, Australian Open, US Open, Roland Garros) from the menu in the header. Each browser remembers its own choice.
@@ -52,6 +53,7 @@ src/
     TournamentTitle.jsx   editable name + date
     QrShare.jsx           QR code card + enlarged view
     Modal.jsx             confirmation dialogs
+    Cheers.jsx            Cheer button, tray, and floating cheers
   lib/
     bracket.js            pure bracket logic (seeding, byes, rounds, consolation)
     groups.js             group stage: splitting groups, schedules, standings, qualifiers
@@ -64,5 +66,6 @@ src/
     follow.js             ★ highlights (per device)
     wakeLock.js           keep the screen awake while hosting
     dates.js              date helpers
+    cheers.js             cheer emoji, spam limit, and cheer events
     pdf.js                printable PDF draw sheet (jsPDF, loaded on demand)
 ```

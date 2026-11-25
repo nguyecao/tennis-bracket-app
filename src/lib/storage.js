@@ -17,6 +17,7 @@ const START = {
   advance: 2,
   tournament: null,
   room: null,
+  cheers: true, // viewers can send cheers while live
 }
 
 function load() {
@@ -36,6 +37,7 @@ function load() {
     saved.scoring = saved.scoring === true
     saved.scoreTiebreak = saved.scoreTiebreak === true
     if (typeof saved.room !== 'string') saved.room = null
+    saved.cheers = saved.cheers !== false
     return saved
   } catch {
     return START

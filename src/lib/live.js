@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Peer from 'peerjs'
 import { isTournament } from './bracket'
+import { isCheer, viewerAllowance, showCheer } from './cheers'
 
 // Rooms use the free PeerJS cloud server only to introduce browsers to each other.
 // Bracket data goes directly from the host's browser to viewers. Nothing is stored.
@@ -31,19 +32,20 @@ function keepAlive(peer, isStopped, onRetry) {
   })
 }
 
-// Message sent to viewers: { tournament, theme }. tournament is null while the host
-// is setting up a new bracket.
+// Message sent to viewers: { tournament, theme, cheers }. tournament is null while the host
+// is setting up a new bracket; cheers says whether the host allows cheering.
+// Cheers travel separately as { cheer: '👏' }.
 const isMessage = (m) =>
   !!m && (m.tournament === null || isTournament(m.tournament)) && typeof m.theme === 'string'
 
-// Host: broadcast the tournament (and theme) to everyone in the room. Incoming messages are ignored,
-// so only the host can change results.
-export function useHost(code, tournament, theme) {
+// Host: broadcast the tournament (and theme) to everyone in the room. The only thing viewers
+// can send back is a cheer, so only the host can change results.
+export function useHost(code, tournament, theme, cheers = true) {
   const [status, setStatus] = useState('off')
   const [viewers, setViewers] = useState(0)
   const conns = useRef([])
   const latest = useRef(null)
-  latest.current = { tournament, theme }
+  latest.current = { tournament, theme, cheers }
 
   useEffect(() => {
     if (!code) return
@@ -67,6 +69,14 @@ export function useHost(code, tournament, theme) {
         })
       })
       p.on('connection', (conn) => {
+        // A viewer's cheer: check it, show it here, and pass it on to everyone else.
+        // Each viewer has their own allowance, so nobody can flood the room.
+        const allowance = viewerAllowance()
+        conn.on('data', (m) => {
+          if (!latest.current.cheers || !isCheer(m) || !allowance.take()) return
+          showCheer(m.cheer)
+          conns.current.forEach((c) => c !== conn && c.open && c.send({ cheer: m.cheer }))
+        })
         conn.on('open', () => {
           conns.current.push(conn)
           sync()
@@ -116,16 +126,20 @@ export function useHost(code, tournament, theme) {
   }, [code])
 
   useEffect(() => {
-    conns.current.forEach((c) => c.open && c.send({ tournament, theme }))
-  }, [tournament, theme])
+    conns.current.forEach((c) => c.open && c.send({ tournament, theme, cheers }))
+  }, [tournament, theme, cheers])
 
-  return { status, viewers }
+  // The host's own cheer (already shown on the host's screen) goes to every viewer
+  const sendCheer = (emoji) => conns.current.forEach((c) => c.open && c.send({ cheer: emoji }))
+
+  return { status, viewers, sendCheer }
 }
 
 // Viewer: connect to a room and keep retrying if the host isn't there.
 export function useViewer(code) {
   const [status, setStatus] = useState('connecting')
-  const [message, setMessage] = useState(null) // latest { tournament, theme } from the host
+  const [message, setMessage] = useState(null) // latest { tournament, theme, cheers } from the host
+  const connRef = useRef(null)
 
   useEffect(() => {
     let peer, conn, connectTimer, peerTimer
@@ -142,10 +156,14 @@ export function useViewer(code) {
       if (stopped || conn?.open || !peer.open) return // !open: runs again on 'open'
       const c = peer.connect(PREFIX + code, { reliable: true })
       const old = conn
-      conn = c
+      conn = connRef.current = c
       old?.close()
       c.on('open', () => c === conn && setStatus('live'))
-      c.on('data', (m) => c === conn && isMessage(m) && setMessage(m))
+      c.on('data', (m) => {
+        if (c !== conn) return
+        if (isMessage(m)) setMessage(m)
+        else if (isCheer(m)) showCheer(m.cheer)
+      })
       c.on('close', () => c === conn && retryConnect())
       c.on('error', () => c === conn && retryConnect())
     }
@@ -174,6 +192,15 @@ export function useViewer(code) {
     }
   }, [code])
 
+  // This viewer's cheer (already shown on their own screen) goes to the host to pass on
+  const sendCheer = (emoji) => connRef.current?.open && connRef.current.send({ cheer: emoji })
+
   // tournament: undefined = nothing received yet, null = host is setting up
-  return { status, tournament: message?.tournament, theme: message?.theme }
+  return {
+    status,
+    tournament: message?.tournament,
+    theme: message?.theme,
+    cheersOn: message?.cheers === true,
+    sendCheer,
+  }
 }

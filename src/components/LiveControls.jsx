@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useHost, makeCode, roomLink } from '../lib/live'
 import Modal from './Modal'
 import { useWakeLock } from '../lib/wakeLock'
+import { trayFor } from '../lib/cheers'
+import { CheerButton, CheerLayer } from './Cheers'
 
-// Host side of a live room: Go live / room status / Copy link / Stop sharing.
-export default function LiveControls({ room, tournament, theme, onRoomChange }) {
-  const { status, viewers } = useHost(room, tournament, theme)
+// Host side of a live room: Go live / room status / Copy link / Cheers on-off / Stop sharing.
+// cheers: whether viewers may send cheers (the host can switch it off).
+export default function LiveControls({ room, tournament, theme, onRoomChange, cheers = true, onCheersChange }) {
+  const { status, viewers, sendCheer } = useHost(room, tournament, theme, cheers)
 
   // While this tab is hosting a room, keep the screen awake so viewers don't lose
   // the connection when the phone would normally auto-lock.
@@ -40,9 +43,23 @@ export default function LiveControls({ room, tournament, theme, onRoomChange }) 
         )}
       </span>
       <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy link'}</button>
+      <button
+        className={`cheers-toggle${cheers ? '' : ' off'}`}
+        role="switch"
+        aria-checked={cheers}
+        title={cheers ? 'Viewers can send cheers. Click to turn off.' : 'Cheers are off. Click to turn on.'}
+        onClick={() => onCheersChange(!cheers)}
+      >
+        <span aria-hidden="true">👏</span>
+        <span className="wide-only">Cheers</span>
+        <span className="switch" aria-hidden="true" />
+      </button>
       <button onClick={() => onRoomChange(null)}>
         Stop<span className="wide-only"> sharing</span>
       </button>
+      {/* Cheers float up here too; the host can cheer along while live */}
+      <CheerLayer />
+      {cheers && status === 'live' && tournament && <CheerButton tray={trayFor(theme)} onSend={sendCheer} />}
       {manualCopy && (
         <Modal title="Share this link" onClose={() => setManualCopy(false)}>
           <p>Your browser blocked copying. Select the link and copy it yourself:</p>
