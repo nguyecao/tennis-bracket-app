@@ -10,6 +10,8 @@ const START = {
   text: '',
   mode: 'shuffle',
   consolation: false,
+  scoring: false, // enter scores for matches
+  scoreTiebreak: false, // use set/game scores to break ties in groups
   format: 'knockout', // or 'groups'
   groupSize: 4, // a number, or 'all' for one group
   advance: 2,
@@ -31,6 +33,8 @@ function load() {
     saved.groupSize = allowed(saved.groupSize, [...GROUP_SIZES, 'all'], START.groupSize)
     saved.advance = allowed(saved.advance, [1, 2, 3, 'all'], START.advance)
     saved.consolation = saved.consolation === true
+    saved.scoring = saved.scoring === true
+    saved.scoreTiebreak = saved.scoreTiebreak === true
     if (typeof saved.room !== 'string') saved.room = null
     return saved
   } catch {

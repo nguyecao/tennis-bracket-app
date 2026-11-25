@@ -1,4 +1,5 @@
 import { getGroups, mainDrawFromGroups } from './groups'
+import { scoreWinner, isScore } from './scores'
 export const BYE = '__BYE__'
 
 // Standard seeding order, e.g. size 8 -> [1, 8, 4, 5, 2, 7, 3, 6]
@@ -102,19 +103,46 @@ export function getBrackets(t) {
     main && t.consolation && slots.length >= 4
       ? buildRounds(consolationSlots(main), t.winners, 'c')
       : null
-  return { groups, main, consolation, labels, drawSeeds }
+  // Attach each match's score (only if it still belongs to the same two players)
+  const all = [...(groups || []).flatMap((g) => g.matches), ...[...(main || []), ...(consolation || [])].flat()]
+  for (const m of all) {
+    const s = t.scores?.[m.id]
+    m.score = s && s.a === m.a && s.b === m.b ? s.sets : null
+  }
+  return { groups, main, consolation, labels, drawSeeds, all }
 }
 
 // Drop any picks that no longer apply (e.g. an earlier result or a group's order changed
 // and that player is no longer in the match).
 function prune(t) {
-  const { groups, main, consolation } = getBrackets(t)
+  const { all } = getBrackets(t)
   const kept = {}
-  const all = [...(groups || []).flatMap((g) => g.matches), ...[...(main || []), ...(consolation || [])].flat()]
+  const scores = {}
   for (const m of all) {
     if (t.winners[m.id] && t.winners[m.id] === m.winner) kept[m.id] = m.winner
+    if (m.score) scores[m.id] = t.scores[m.id]
   }
-  return { ...t, winners: kept }
+  return { ...t, winners: kept, ...(t.scores ? { scores } : {}) }
+}
+
+// Save a match score (an empty list clears it). If the score shows who won,
+// that player is set as the winner automatically.
+export function withScore(t, id, sets) {
+  const m = getBrackets(t).all.find((x) => x.id === id)
+  if (!m) return t
+  const scores = { ...t.scores }
+  if (sets.length) scores[id] = { a: m.a, b: m.b, sets }
+  else delete scores[id]
+  let next = { ...t, scores }
+  // A new group score can change set/game tiebreaks, so the host's tie order for that group resets
+  const group = /^g(\d+)-/.exec(id)?.[1]
+  if (group != null && next.tieOrder?.[group]) {
+    next.tieOrder = { ...next.tieOrder }
+    delete next.tieOrder[group]
+  }
+  const w = scoreWinner(sets, m.a, m.b)
+  if (w && next.winners[id] !== w) next = withPick(next, id, w)
+  return prune(next)
 }
 
 // Toggle a winner (click again to undo), then tidy up anything that depended on it.
@@ -147,6 +175,9 @@ export function isTournament(t) {
   if (t.seeds != null && !isNameList(t.seeds)) return false
   if (t.name != null && (typeof t.name !== 'string' || t.name.length > 100)) return false
   if (t.date != null && !/^\d{4}-\d{2}-\d{2}$/.test(t.date)) return false
+  if (t.scoring != null && typeof t.scoring !== 'boolean') return false
+  if (t.scoreTiebreak != null && typeof t.scoreTiebreak !== 'boolean') return false
+  if (t.scores != null && (typeof t.scores !== 'object' || !Object.values(t.scores).every(isScore))) return false
 
   if (t.format === 'groups') {
     return (

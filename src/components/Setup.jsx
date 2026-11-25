@@ -7,7 +7,7 @@ import { today, isDay } from '../lib/dates'
 // Name entry + options. Calls onGenerate(names) when the form is valid.
 // onResume (optional): shown when a saved bracket exists but we're on the home page.
 export default function Setup({ state, update, onGenerate, onResume, defaultName }) {
-  const { name, date, text, mode, consolation, format, groupSize, advance } = state
+  const { name, date, text, mode, consolation, scoring, scoreTiebreak, format, groupSize, advance } = state
   const names = parseNames(text)
   const groupInfo = format === 'groups' ? describeGroups(names.length, groupSize, advance) : null
   const error = nameError(names) || groupInfo?.error || ''
@@ -154,6 +154,29 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
           />
           Include consolation bracket
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={scoring}
+            onChange={(e) => update({ scoring: e.target.checked })}
+          />
+          <span>
+            Keep score <span className="muted">(enter set scores for each match)</span>
+          </span>
+        </label>
+        {scoring && format === 'groups' && (
+          <label className="sub-option">
+            <input
+              type="checkbox"
+              checked={scoreTiebreak}
+              onChange={(e) => update({ scoreTiebreak: e.target.checked })}
+            />
+            <span>
+              Use scores to break ties in {advance === 'all' ? 'pools' : 'groups'}{' '}
+              <span className="muted">(set difference, then game difference)</span>
+            </span>
+          </label>
+        )}
       </div>
 
       {error && text.trim() && <p className="error">{error}</p>}

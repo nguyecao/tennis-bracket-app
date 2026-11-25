@@ -3,7 +3,8 @@ import Match from './Match'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
 // All groups: standings table + round-robin matches for each.
-export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, followed, onShowMain }) {
+// scoreTiebreak: standings also use set and game difference (shown as extra columns).
+export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, followed, onScore, onShowMain, scoreTiebreak }) {
   const allDone = groups.every((g) => g.done)
   // One group and nobody goes on: pure round robin, the group winner is the champion
   // (not while players are still level at the top and the host hasn't ordered them)
@@ -27,7 +28,7 @@ export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReo
           : hasMainDraw
             ? `Top ${advance} in each group advance to the Main Draw. `
             : 'Everyone plays everyone; the best record wins. '}
-        Ties are broken by head-to-head
+        Ties are broken by head-to-head{scoreTiebreak ? ', then set difference, then game difference' : ''}
         {onReorder ? '; use ▲▼ to order players who are still tied.' : '.'}
       </p>
 
@@ -48,6 +49,8 @@ export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReo
             advance={pools ? 0 : hasMainDraw ? advance : 1}
             word={word}
             followed={followed}
+            onScore={onScore}
+            scoreTiebreak={scoreTiebreak}
             onPick={onPick}
             onReorder={onReorder}
             seedOf={seedOf}
@@ -57,6 +60,9 @@ export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReo
     </section>
   )
 }
+
+// +3 / 0 / −2 for set and game difference
+const signed = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0')
 
 // Smoothly slide table rows to their new position whenever the order changes
 // (tie arrows, or a result that changes the standings). Returns a ref setter per row.
@@ -84,7 +90,7 @@ function useRowSlide(order) {
 }
 
 // advance: how many rows to mark as going through (0 in pool play, where everyone does)
-function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }) {
+function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed, onScore, scoreTiebreak }) {
   const { table, rounds, played, matches, done, tiesSet } = group
   const rowRef = useRowSlide(table.map((r) => r.name).join('|'))
 
@@ -99,6 +105,8 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }
   const tied = (i) => done && !!table[i]?.tieKey
   const tiedWith = (i, j) => tied(i) && tied(j) && table[i].tieKey === table[j].tieKey
   const showEquals = (i) => tied(i) && !tiesSet
+  // Only make room for the ▲▼ column when there is a tie to order
+  const showArrows = onReorder && done && table.some((r) => r.tieKey)
 
   return (
     <div className={`group${done ? ' done' : ''}`}>
@@ -122,7 +130,13 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }
             <th className="player-col">Player</th>
             <th className="num-col">W</th>
             <th className="num-col">L</th>
-            {onReorder && done && <th className="tie-col" aria-label="Order ties" />}
+            {scoreTiebreak && (
+              <>
+                <th className="diff-col" title="Set difference">Sets</th>
+                <th className="diff-col" title="Game difference">Games</th>
+              </>
+            )}
+            {showArrows && <th className="tie-col" aria-label="Order ties" />}
           </tr>
         </thead>
         <tbody>
@@ -142,7 +156,13 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }
               </td>
               <td>{r.w}</td>
               <td>{r.l}</td>
-              {onReorder && done && (
+              {scoreTiebreak && (
+                <>
+                  <td className="diff">{signed(r.sets)}</td>
+                  <td className="diff">{signed(r.games)}</td>
+                </>
+              )}
+              {showArrows && (
                 <td className="tie-arrows">
                   {/* Both spots are always there so arrows line up in columns. A tied player already
                       at the top (or bottom) of their tie gets a faded, disabled arrow. */}
@@ -180,7 +200,7 @@ function GroupCard({ group, advance, word, onPick, onReorder, seedOf, followed }
           <div key={r}>
             <h4>Round {r + 1}</h4>
             {pairs.map((m) => (
-              <Match key={m.id} match={m} onPick={onPick} seedOf={seedOf} followed={followed} />
+              <Match key={m.id} match={m} onPick={onPick} seedOf={seedOf} followed={followed} onScore={onScore} />
             ))}
           </div>
         ))}

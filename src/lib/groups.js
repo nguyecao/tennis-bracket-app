@@ -54,16 +54,29 @@ function roundRobin(players) {
   return rounds
 }
 
-// Standings: most wins first; ties broken by head-to-head among the tied players;
-// anyone still tied is ordered by the host (tieOrder), otherwise by seed/list order.
-function standings(players, matches, tieOrder = []) {
-  const rows = players.map((name) => ({ name, w: 0, l: 0 }))
+// Standings: most wins first; ties broken by head-to-head among the tied players; then,
+// if the tournament uses scores for tiebreaks, set difference and then game difference
+// (from all of a player's group matches); anyone still tied is ordered by the host
+// (tieOrder), otherwise by seed/list order.
+function standings(players, matches, tieOrder = [], useScores = false) {
+  const rows = players.map((name) => ({ name, w: 0, l: 0, sets: 0, games: 0 }))
   const row = Object.fromEntries(rows.map((r) => [r.name, r]))
   for (const m of matches) {
-    if (!m.winner) continue
-    row[m.winner].w++
-    row[m.winner === m.a ? m.b : m.a].l++
+    if (m.winner) {
+      row[m.winner].w++
+      row[m.winner === m.a ? m.b : m.a].l++
+    }
+    // Set and game difference: +1 per set won, −1 per set lost; same for games
+    for (const [x, y] of m.score || []) {
+      if (x !== y) {
+        row[m.a].sets += x > y ? 1 : -1
+        row[m.b].sets += y > x ? 1 : -1
+      }
+      row[m.a].games += x - y
+      row[m.b].games += y - x
+    }
   }
+  const bySets = (x, y) => (useScores ? y.sets - x.sets || y.games - x.games : 0)
 
   const manual = (name) => {
     const i = tieOrder.indexOf(name)
@@ -78,10 +91,12 @@ function standings(players, matches, tieOrder = []) {
     const h2h = (name) =>
       matches.filter((m) => m.winner === name && names.has(m.a) && names.has(m.b)).length
     level.forEach((r) => (r.h2h = h2h(r.name)))
-    level.sort((x, y) => y.h2h - x.h2h || manual(x.name) - manual(y.name))
+    level.sort((x, y) => y.h2h - x.h2h || bySets(x, y) || manual(x.name) - manual(y.name))
     for (const r of level) {
-      const same = level.filter((o) => o.h2h === r.h2h)
-      r.tieKey = same.length > 1 ? `${w}-${r.h2h}` : null // still tied after head-to-head
+      // still tied after head-to-head (and scores, when used)
+      const key = useScores ? `${w}|${r.h2h}|${r.sets}|${r.games}` : `${w}|${r.h2h}`
+      const same = level.filter((o) => (useScores ? `${w}|${o.h2h}|${o.sets}|${o.games}` : `${w}|${o.h2h}`) === key)
+      r.tieKey = same.length > 1 ? key : null
       result.push(r)
     }
   }
@@ -95,13 +110,20 @@ export function getGroups(t) {
       pairs.map(([a, b], i) => {
         const id = `g${gi}-${r}-${i}`
         const pick = t.winners[id]
-        return { id, a, b, winner: pick === a || pick === b ? pick : null }
+        const s = t.scores?.[id]
+        return {
+          id,
+          a,
+          b,
+          winner: pick === a || pick === b ? pick : null,
+          score: s && s.a === a && s.b === b ? s.sets : null,
+        }
       })
     )
     const matches = rounds.flat()
     const done = matches.every((m) => m.winner)
     const tiesSet = !!t.tieOrder?.[gi]
-    const table = standings(g.players, matches, t.tieOrder?.[gi])
+    const table = standings(g.players, matches, t.tieOrder?.[gi], t.scoring && t.scoreTiebreak)
     return {
       ...g,
       index: gi,

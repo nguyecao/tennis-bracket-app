@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { makeSlots, shuffle, withPick, withTieOrder } from '../lib/bracket'
+import { makeSlots, shuffle, withPick, withTieOrder, withScore } from '../lib/bracket'
 import { makeGroups } from '../lib/groups'
 import { useSavedState } from '../lib/storage'
 import { useTheme } from '../lib/theme'
@@ -25,6 +25,9 @@ export default function Host({ startAtHome = false }) {
     const common = {
       name: state.name.trim(),
       date: state.date || today(), // not changed in setup = today
+      scoring: state.scoring, // keep score for this tournament
+      scoreTiebreak: state.scoring && state.format === 'groups' && state.scoreTiebreak,
+      scores: {},
       created: Date.now(),
       seeds: state.mode === 'rank' ? players : null,
       winners: {},
@@ -50,6 +53,7 @@ export default function Host({ startAtHome = false }) {
 
   const rename = (name) => update({ tournament: { ...tournament, name } })
   const redate = (date) => update({ tournament: { ...tournament, date } })
+  const saveScore = (id, sets) => update({ tournament: withScore(tournament, id, sets) })
 
   // Host's order for group players still tied after head-to-head
   const reorder = (group, order) => update({ tournament: withTieOrder(tournament, group, order) })
@@ -60,7 +64,7 @@ export default function Host({ startAtHome = false }) {
   const guard = (title, message, label, action) =>
     hasResults ? setConfirm({ title, message, label, action }) : action()
 
-  const clearResults = () => update({ tournament: { ...tournament, winners: {}, tieOrder: {} } })
+  const clearResults = () => update({ tournament: { ...tournament, winners: {}, tieOrder: {}, scores: {} } })
   const newTournament = () => update({ tournament: null })
 
   return (
@@ -111,6 +115,7 @@ export default function Host({ startAtHome = false }) {
           onReorder={reorder}
           onRename={rename}
           onRedate={redate}
+          onScore={saveScore}
           defaultName={theme.defaultName}
           shareRoom={state.room}
         />

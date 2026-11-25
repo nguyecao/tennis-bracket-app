@@ -10,13 +10,22 @@ export default function Players({ t, brackets, groupWord, seedOf, followed, onTo
 
   return (
     <section className="card">
-      <h2>Players</h2>
+      {/* "Clear highlights" lives in the heading row, which is always there, so showing or
+          hiding it never moves the player list */}
+      <h2>
+        Players
+        {followed.size > 0 && (
+          <button className="text-button clear-highlights" onClick={onClear}>
+            Clear highlights ({followed.size})
+          </button>
+        )}
+      </h2>
       <p className="muted group-help">
         Tap a player to highlight them with ★ in every tab. Highlights are only on this device.
       </p>
 
-      <div className="players-tools">
-        {all.length > 8 && (
+      {all.length > 8 && (
+        <div className="players-tools">
           <input
             className="name-input"
             type="search"
@@ -24,13 +33,8 @@ export default function Players({ t, brackets, groupWord, seedOf, followed, onTo
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        )}
-        {followed.size > 0 && (
-          <button className="text-button" onClick={onClear}>
-            Clear highlights ({followed.size})
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <ul className="player-list">
         {shown.map((p) => {

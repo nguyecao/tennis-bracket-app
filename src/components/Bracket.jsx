@@ -9,7 +9,7 @@ import Match from './Match'
 // labels (optional): placeholder text for first-round spots still waiting on a group.
 // waiting: the draw can't start yet (group stage still running), so no round is "in progress".
 // followed: players highlighted with ★ (shown wherever they appear).
-export default function Bracket({ title, rounds, labels, onPick, seedOf, followed, waiting = false }) {
+export default function Bracket({ title, rounds, labels, onPick, seedOf, followed, onScore, waiting = false }) {
   const champion = rounds.at(-1)[0].winner
   // The round in progress: the earliest round that still has an unplayed match.
   // (-1 when the bracket is finished.)
@@ -74,6 +74,7 @@ export default function Bracket({ title, rounds, labels, onPick, seedOf, followe
                       seedOf={seedOf}
                       arriving={arriving}
                       followed={followed}
+                      onScore={onScore}
                       labels={r === 0 && labels ? [labels[2 * i], labels[2 * i + 1]] : null}
                     />
                   </div>
