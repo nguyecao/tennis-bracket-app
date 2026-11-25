@@ -135,7 +135,7 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
                 <button role="tab" aria-selected={tab === 'main'} onClick={() => switchTab('main')}>
                   <span className="wide-only">Main Draw</span>
                   <span className="narrow-only">Draw</span>
-                  {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta">Ready</span>}
+                  {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta tab-ready">Ready</span>}
                 </button>
               )}
               <button role="tab" aria-selected={tab === 'players'} onClick={() => switchTab('players')}>

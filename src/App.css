@@ -1074,7 +1074,7 @@ button:not(.player):not(.score-bar):not(:disabled):active { transform: scale(0.9
   .tabs button:has(.tab-meta) { padding-right: 0.35rem; }
 }
 @media (max-width: 360px) {
-  .tabs button { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .tabs button { padding-left: 0.5rem; padding-right: 0.5rem; gap: 0.3rem; }
   .tabs button:has(.tab-meta) { padding-right: 0.3rem; }
 }
 
@@ -1206,8 +1206,9 @@ button:not(.player):not(.score-bar):not(:disabled):active { transform: scale(0.9
 @keyframes ball-pulse { 50% { opacity: 0.45; } }
 
 /* Tab row: the tabs, then (after a small space) Download PDF */
-.tab-row { display: flex; align-items: center; gap: 0.75rem; align-self: stretch; min-width: 0; }
-.tab-row .tabs { margin-bottom: 0; min-width: 0; }
+.tab-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; align-self: stretch; }
+/* The tabs never shrink here: if space runs out, the button moves to the next line instead */
+.tab-row .tabs { margin-bottom: 0; flex-shrink: 0; }
 .pdf-button {
   display: inline-flex;
   align-items: center;
@@ -1220,10 +1221,26 @@ button:not(.player):not(.score-bar):not(:disabled):active { transform: scale(0.9
 }
 .pdf-button:hover, .pdf-button:focus-visible { background: rgba(255, 255, 255, 0.12); }
 .pdf-button:disabled { cursor: progress; opacity: 0.7; }
-@media (max-width: 600px) {
-  /* phones: icon only, so the tabs keep their room */
-  .tab-row { order: 3; flex-basis: 100%; }
+@media (max-width: 800px) {
+  /* narrower screens: icon only, so the tabs keep their room */
   .pdf-label { display: none; }
   .pdf-button { padding: 0; width: 2.6rem; height: 2.6rem; justify-content: center; }
+}
+@media (max-width: 600px) {
+  /* phones: the tabs shrink to fit beside the button, on one line */
+  .tab-row { order: 3; flex-basis: 100%; flex-wrap: nowrap; min-width: 0; }
+  .tab-row .tabs { flex-shrink: 1; min-width: 0; }
+}
+@media (max-width: 420px) {
+  /* small phones: a tighter (but still visible) gap, so even the longest tab labels fit */
+  .tab-row { gap: 0.5rem; }
+  .pdf-button { margin-left: 0.15rem; width: 2.3rem; height: 2.3rem; }
+  .tabs button { gap: 0.35rem; }
+  .tab-ready { display: none; } /* the "Ready" hint on Draw: no room for it beside the PDF button */
+}
+@media (max-width: 345px) {
+  /* the very smallest phones: slightly smaller tab text */
+  .tabs button { font-size: 0.8rem; gap: 0.3rem; }
+  .tab-meta { font-size: 0.7rem; padding: 0.05rem 0.25rem; }
 }
 .download-icon { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
