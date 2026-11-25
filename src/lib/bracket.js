@@ -151,6 +151,14 @@ export function withPick(t, id, name) {
   if (winners[id] === name) delete winners[id]
   else winners[id] = name
 
+  // A saved score that says someone else won (or the pick was undone) no longer fits
+  let scores = t.scores
+  const s = scores?.[id]
+  if (s && scoreWinner(s.sets, s.a, s.b) && scoreWinner(s.sets, s.a, s.b) !== winners[id]) {
+    scores = { ...scores }
+    delete scores[id]
+  }
+
   // A changed group result can create different ties, so the host's tie order for that
   // group no longer applies.
   let tieOrder = t.tieOrder
@@ -159,7 +167,7 @@ export function withPick(t, id, name) {
     tieOrder = { ...tieOrder }
     delete tieOrder[group]
   }
-  return prune({ ...t, winners, tieOrder })
+  return prune({ ...t, winners, tieOrder, ...(scores ? { scores } : {}) })
 }
 
 // Host put tied group players in order. This can change who advances, so tidy the Main Draw.

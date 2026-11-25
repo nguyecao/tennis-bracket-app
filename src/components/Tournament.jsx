@@ -9,8 +9,6 @@ import QrCard from './QrShare'
 import ScoreEditor from './ScoreEditor'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
-// Main draw + optional consolation, and for group-stage tournaments a Group Stage tab.
-// Leave out onPick / onReorder for a read-only (viewer) view.
 // Tabs: [Group Stage] · Main Draw · Players. Leave out onPick / onReorder for a read-only (viewer) view.
 // defaultName: shown when the tournament has no name (depends on the theme).
 // shareRoom: live room code, if any; shows a QR code people can scan to watch.
@@ -54,6 +52,8 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
   // Sliding highlight behind the selected tab: measure the selected tab and move to it
   const tabsRef = useRef(null)
   const [pill, setPill] = useState(null)
+  const placedTab = useRef(null)
+  const moved = useRef(false) // no slide on first draw, only when switching
   useLayoutEffect(() => {
     const box = tabsRef.current
     if (!box) return
@@ -80,12 +80,9 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
     return () => watch.disconnect()
     // Re-measure right away (same frame) whenever a tab label can change width
   }, [tab, !!groups, !!main, followed.size, played, total, playerCount, groupsDone, mainPlayed === 0])
-  const placedTab = useRef(null)
-  const moved = useRef(false) // no slide on first draw, only when switching
   useLayoutEffect(() => {
     if (pill) requestAnimationFrame(() => (moved.current = true))
   }, [pill])
-
 
   return (
     <>

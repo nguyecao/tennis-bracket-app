@@ -6,8 +6,11 @@ Enter 2–128 names and generate a single-elimination bracket. No database — e
 - **Group stage** (optional): players are split into round-robin groups (4 per group recommended); the top 1–3 from each group advance into the knockout Main Draw. Choose "One group" + "Top 1" for a plain round robin. Choose "Everyone" under Advancing for **pool play for seeding**: nobody is eliminated, and pool results decide each player's Main Draw seed. Hosts and viewers switch between **Group Stage** and **Main Draw** tabs.
 - **Consolation bracket** (optional) collects every player who loses their first match.
 - Click a player to advance them; click again to undo.
+- **Tournament name and date** are optional and editable on the bracket (✎). With no name, the theme's name is used.
+- **Keep score** (optional): tap "+ Add score" under a match and enter any number of sets (1–5) in any format; the winner is filled in automatically. Turn on **Use scores to break ties in groups** to rank tied players by set difference, then game difference (after head-to-head).
+- **Players** tab: every player's status and record. Tap ★ to highlight players across the bracket (saved on this device only).
 - Pick a theme (Classic, Wimbledon, Australian Open, US Open, Roland Garros) from the menu in the header. Each browser remembers its own choice.
-- **Go live** creates a 6-character room code. **Copy link** copies a viewer link to your clipboard. Anyone who opens it (or types the code under "Watching someone else's bracket?") sees results the moment you click them. Viewers can't change anything.
+- **Go live** creates a 6-character room code. **Copy link** copies a viewer link to your clipboard. Anyone who opens it (or types the code under "Watching someone else's bracket?") sees results the moment you click them. Viewers can't change anything. A QR code beside the title opens the same viewer link (tap it to enlarge). While live, the host's screen is kept awake where the browser supports it.
 
 ## How live rooms work (no database)
 
@@ -42,7 +45,12 @@ src/
     Tournament.jsx        Group Stage / Main Draw tabs, main draw + consolation
     GroupStage.jsx        group standings tables + round-robin matches
     Bracket.jsx           one bracket: rounds and champion
-    Match.jsx             one match: two clickable players
+    Match.jsx             one match: two clickable players (+ score)
+    Players.jsx           Players tab: status, records, ★ highlights
+    ScoreEditor.jsx       set-by-set score entry
+    TournamentTitle.jsx   editable name + date
+    QrShare.jsx           QR code card + enlarged view
+    Modal.jsx             confirmation dialogs
   lib/
     bracket.js            pure bracket logic (seeding, byes, rounds, consolation)
     groups.js             group stage: splitting groups, schedules, standings, qualifiers
@@ -50,4 +58,9 @@ src/
     names.js              parse + validate the name list
     storage.js            useSavedState: state saved to localStorage
     theme.js              theme list + useTheme (colors live in App.css)
+    scores.js             score format + who won from a score
+    players.js            per-player status and records
+    follow.js             ★ highlights (per device)
+    wakeLock.js           keep the screen awake while hosting
+    dates.js              date helpers
 ```

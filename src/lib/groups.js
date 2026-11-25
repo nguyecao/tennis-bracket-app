@@ -66,8 +66,9 @@ function standings(players, matches, tieOrder = [], useScores = false) {
       row[m.winner].w++
       row[m.winner === m.a ? m.b : m.a].l++
     }
-    // Set and game difference: +1 per set won, −1 per set lost; same for games
-    for (const [x, y] of m.score || []) {
+    // Set and game difference: +1 per set won, −1 per set lost; same for games.
+    // Only finished matches count, so a half-entered score can't move anyone.
+    for (const [x, y] of (m.winner && m.score) || []) {
       if (x !== y) {
         row[m.a].sets += x > y ? 1 : -1
         row[m.b].sets += y > x ? 1 : -1
