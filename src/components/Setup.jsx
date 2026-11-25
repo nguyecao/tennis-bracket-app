@@ -25,164 +25,171 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
           ← Back to your bracket
         </button>
       )}
-      <div className="name-date">
-        <div>
-          <label htmlFor="tournament-name">
-            Tournament name <span className="muted">(optional)</span>
-          </label>
-          <input
-            id="tournament-name"
-            className="name-input"
-            value={name}
-            maxLength={80}
-            placeholder={defaultName}
-            onChange={(e) => update({ name: e.target.value })}
-          />
-        </div>
-        <div>
-          <label htmlFor="tournament-date">Date</label>
-          <input
-            id="tournament-date"
-            type="date"
-            className="name-input"
-            value={date || today()}
-            onChange={(e) => update({ date: isDay(e.target.value) ? e.target.value : '' })}
-          />
-        </div>
-      </div>
-
-      <label>
-        Players <span className="muted">({names.length} / 128, one per line)</span>
-      </label>
-      <div className="name-editor">
-        <div className={`line-numbers${text ? '' : ' placeholder'}`} ref={gutter} aria-hidden="true">
-          {numbers.map((n, i) => (
-            <div key={i} className={n > 128 ? 'over' : ''}>
-              {n}
+      {/* Left: who and when. Right: how it's played. Side by side on wide screens. */}
+      <div className="setup-cols">
+        <div className="setup-side setup-who">
+          <div className="name-date">
+            <div>
+              <label htmlFor="tournament-name">
+                Tournament name <span className="muted">(optional)</span>
+              </label>
+              <input
+                id="tournament-name"
+                className="name-input"
+                value={name}
+                maxLength={80}
+                placeholder={defaultName}
+                onChange={(e) => update({ name: e.target.value })}
+              />
             </div>
-          ))}
-        </div>
-        <textarea
-          rows={12}
-          wrap="off"
-          value={text}
-          placeholder={PLACEHOLDER}
-          onChange={(e) => update({ text: e.target.value })}
-          onScroll={(e) => (gutter.current.scrollTop = e.target.scrollTop)}
-        />
-      </div>
-
-      <div className="options">
-        <label>
-          <input
-            type="radio"
-            checked={mode === 'shuffle'}
-            onChange={() => update({ mode: 'shuffle' })}
-          />
-          Shuffle players
-        </label>
-        <label>
-          <input type="radio" checked={mode === 'rank'} onChange={() => update({ mode: 'rank' })} />
-          Rank by list order (1st line = top seed)
-        </label>
-      </div>
-
-      <div className="options">
-        <span className="option-title">Format</span>
-        <label>
-          <input
-            type="radio"
-            checked={format === 'knockout'}
-            onChange={() => update({ format: 'knockout' })}
-          />
-          Knockout
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={format === 'groups'}
-            onChange={() => update({ format: 'groups' })}
-          />
-          Group stage, then knockout
-        </label>
-
-        {format === 'groups' && (
-          <div className="group-options">
-            <label>
-              Group size
-              <select
-                value={groupSize}
-                onChange={(e) =>
-                  update({ groupSize: e.target.value === 'all' ? 'all' : Number(e.target.value) })
-                }
-              >
-                {GROUP_SIZES.map((n) => (
-                  <option key={n} value={n}>
-                    Up to {n} players{n === RECOMMENDED_GROUP_SIZE ? ' (recommended)' : ''}
-                  </option>
-                ))}
-                <option value="all">One group (everyone plays everyone)</option>
-              </select>
-            </label>
-            <label>
-              Advancing
-              <select
-                value={advance}
-                onChange={(e) =>
-                  update({ advance: e.target.value === 'all' ? 'all' : Number(e.target.value) })
-                }
-              >
-                {[1, 2, 3].map((n) => (
-                  <option key={n} value={n}>
-                    Top {n} from each group
-                  </option>
-                ))}
-                <option value="all">Everyone (pool play for seeding)</option>
-              </select>
-            </label>
-            {groupInfo?.summary && names.length >= 2 && <p className="muted">{groupInfo.summary}</p>}
+            <div>
+              <label htmlFor="tournament-date">Date</label>
+              <input
+                id="tournament-date"
+                type="date"
+                className="name-input"
+                value={date || today()}
+                onChange={(e) => update({ date: isDay(e.target.value) ? e.target.value : '' })}
+              />
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="options">
-        <label>
-          <input
-            type="checkbox"
-            checked={consolation}
-            onChange={(e) => update({ consolation: e.target.checked })}
-          />
-          Include consolation bracket
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={scoring}
-            onChange={(e) => update({ scoring: e.target.checked })}
-          />
-          <span>
-            Keep score <span className="muted">(enter set scores for each match)</span>
-          </span>
-        </label>
-        {scoring && format === 'groups' && (
-          <label className="sub-option">
-            <input
-              type="checkbox"
-              checked={scoreTiebreak}
-              onChange={(e) => update({ scoreTiebreak: e.target.checked })}
-            />
-            <span>
-              Use scores to break ties in {advance === 'all' ? 'pools' : 'groups'}{' '}
-              <span className="muted">(set difference, then game difference)</span>
-            </span>
+          <label>
+            Players <span className="muted">({names.length} / 128, one per line)</span>
           </label>
-        )}
-      </div>
+          <div className="name-editor">
+            <div className={`line-numbers${text ? '' : ' placeholder'}`} ref={gutter} aria-hidden="true">
+              {numbers.map((n, i) => (
+                <div key={i} className={n > 128 ? 'over' : ''}>
+                  {n}
+                </div>
+              ))}
+            </div>
+            <textarea
+              rows={12}
+              wrap="off"
+              value={text}
+              placeholder={PLACEHOLDER}
+              onChange={(e) => update({ text: e.target.value })}
+              onScroll={(e) => (gutter.current.scrollTop = e.target.scrollTop)}
+            />
+          </div>
+        </div>
+        <div className="setup-side setup-how">
+          <div className="options">
+            <span className="option-title">Seeding</span>
+            <label>
+              <input
+                type="radio"
+                checked={mode === 'shuffle'}
+                onChange={() => update({ mode: 'shuffle' })}
+              />
+              Shuffle players
+            </label>
+            <label>
+              <input type="radio" checked={mode === 'rank'} onChange={() => update({ mode: 'rank' })} />
+              Rank by list order (1st line = top seed)
+            </label>
+          </div>
 
-      {error && text.trim() && <p className="error">{error}</p>}
-      <button className="primary big" disabled={!!error} onClick={() => onGenerate(names)}>
-        Generate bracket
-      </button>
+          <div className="options">
+            <span className="option-title">Format</span>
+            <label>
+              <input
+                type="radio"
+                checked={format === 'knockout'}
+                onChange={() => update({ format: 'knockout' })}
+              />
+              Knockout
+            </label>
+            <label>
+              <input
+                type="radio"
+                checked={format === 'groups'}
+                onChange={() => update({ format: 'groups' })}
+              />
+              Group stage, then knockout
+            </label>
+
+            {format === 'groups' && (
+              <div className="group-options">
+                <label>
+                  Group size
+                  <select
+                    value={groupSize}
+                    onChange={(e) =>
+                      update({ groupSize: e.target.value === 'all' ? 'all' : Number(e.target.value) })
+                    }
+                  >
+                    {GROUP_SIZES.map((n) => (
+                      <option key={n} value={n}>
+                        Up to {n} players{n === RECOMMENDED_GROUP_SIZE ? ' (recommended)' : ''}
+                      </option>
+                    ))}
+                    <option value="all">One group (everyone plays everyone)</option>
+                  </select>
+                </label>
+                <label>
+                  Advancing
+                  <select
+                    value={advance}
+                    onChange={(e) =>
+                      update({ advance: e.target.value === 'all' ? 'all' : Number(e.target.value) })
+                    }
+                  >
+                    {[1, 2, 3].map((n) => (
+                      <option key={n} value={n}>
+                        Top {n} from each group
+                      </option>
+                    ))}
+                    <option value="all">Everyone (pool play for seeding)</option>
+                  </select>
+                </label>
+                {groupInfo?.summary && names.length >= 2 && <p className="muted">{groupInfo.summary}</p>}
+              </div>
+            )}
+          </div>
+
+          <div className="options">
+            <label>
+              <input
+                type="checkbox"
+                checked={consolation}
+                onChange={(e) => update({ consolation: e.target.checked })}
+              />
+              Include consolation bracket
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={scoring}
+                onChange={(e) => update({ scoring: e.target.checked })}
+              />
+              <span>
+                Keep score <span className="muted">(enter set scores for each match)</span>
+              </span>
+            </label>
+            {scoring && format === 'groups' && (
+              <label className="sub-option">
+                <input
+                  type="checkbox"
+                  checked={scoreTiebreak}
+                  onChange={(e) => update({ scoreTiebreak: e.target.checked })}
+                />
+                <span>
+                  Use scores to break ties in {advance === 'all' ? 'pools' : 'groups'}{' '}
+                  <span className="muted">(set difference, then game difference)</span>
+                </span>
+              </label>
+            )}
+          </div>
+
+          {error && text.trim() && <p className="error">{error}</p>}
+          <button className="primary big" disabled={!!error} onClick={() => onGenerate(names)}>
+            Generate bracket
+          </button>
+        </div>
+      </div>
 
       <JoinRoom />
     </section>
