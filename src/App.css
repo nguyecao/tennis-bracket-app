@@ -1048,13 +1048,16 @@ button.resume {
 .player-row { transition: border-color 0.2s, background-color 0.2s; }
 
 /* Buttons give a small press when tapped */
-button:not(.player):not(:disabled):active { transform: scale(0.96); }
+button:not(.player):not(.score-bar):not(:disabled):active { transform: scale(0.96); }
+/* The score bar is part of the match box, so it darkens when pressed instead of shrinking */
+.score-bar { transition: opacity 0.15s, filter 0.15s; }
+.score-bar:active { opacity: 1; filter: brightness(0.8); }
 
 @media (prefers-reduced-motion: reduce) {
   .tab-pill.sliding { transition: none; }
   .tab-panel, .dropdown-menu, .modal[open], .modal[open]::backdrop, .champ,
   .player-row.followed .star, .notice-bar, .tie-note, .qr-card { animation: none; }
-  button:not(.player):not(:disabled):active { transform: none; }
+  button:not(.player):not(.score-bar):not(:disabled):active { transform: none; }
 }
 
 @media (max-width: 360px) {
@@ -1117,3 +1120,16 @@ button:not(.player):not(:disabled):active { transform: scale(0.96); }
   .setup-how > .options:first-child { margin-top: 0; }
   .setup-how > button.primary.big { margin-top: auto; }
 }
+
+/* Setup: extra options (group settings, score tiebreak) slide open and closed */
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  align-self: start; /* don't stretch: keeps it 0 tall when closed */
+  margin-top: -0.6rem; /* cancel the options' row gap while closed */
+  opacity: 0;
+  transition: grid-template-rows 0.28s ease, margin-top 0.28s ease, opacity 0.2s ease;
+}
+.reveal.open { grid-template-rows: 1fr; margin-top: 0; opacity: 1; }
+.reveal > div { min-height: 0; overflow: clip; overflow-clip-margin: 4px; } /* room for focus rings */
+@media (prefers-reduced-motion: reduce) { .reveal { transition: none; } }

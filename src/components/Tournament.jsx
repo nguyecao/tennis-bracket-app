@@ -174,6 +174,7 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
                 seedOf={drawSeedOf}
                 followed={followed}
                 onScore={openScore}
+                waiting={groups ? !groupsDone : false}
               />
             )}
           </>

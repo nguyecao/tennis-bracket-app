@@ -111,7 +111,7 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
               Group stage, then knockout
             </label>
 
-            {format === 'groups' && (
+            <Reveal open={format === 'groups'}>
               <div className="group-options">
                 <label>
                   Group size
@@ -147,7 +147,7 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
                 </label>
                 {groupInfo?.summary && names.length >= 2 && <p className="muted">{groupInfo.summary}</p>}
               </div>
-            )}
+            </Reveal>
           </div>
 
           <div className="options">
@@ -169,7 +169,7 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
                 Keep score <span className="muted">(enter set scores for each match)</span>
               </span>
             </label>
-            {scoring && format === 'groups' && (
+            <Reveal open={scoring && format === 'groups'}>
               <label className="sub-option">
                 <input
                   type="checkbox"
@@ -181,7 +181,7 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
                   <span className="muted">(set difference, then game difference)</span>
                 </span>
               </label>
-            )}
+            </Reveal>
           </div>
 
           {error && text.trim() && <p className="error">{error}</p>}
@@ -193,6 +193,16 @@ export default function Setup({ state, update, onGenerate, onResume, defaultName
 
       <JoinRoom />
     </section>
+  )
+}
+
+// Extra options that slide open below the choice that shows them. Kept in the page while
+// closed (but unreachable), so they can animate both ways.
+function Reveal({ open, children }) {
+  return (
+    <div className={`reveal${open ? ' open' : ''}`} inert={!open}>
+      <div>{children}</div>
+    </div>
   )
 }
 
