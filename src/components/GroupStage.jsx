@@ -1,18 +1,12 @@
 import { useLayoutEffect, useRef } from 'react'
 import Match from './Match'
-import { isPoolPlay, groupWord } from '../lib/groups'
+import { isPoolPlay, groupWord, roundRobinChampion } from '../lib/groups'
 
 // All groups: standings table + round-robin matches for each.
 // scoreTiebreak: standings also use set and game difference (shown as extra columns).
 export default function GroupStage({ groups, advance, hasMainDraw, onPick, onReorder, seedOf, followed, onScore, onShowMain, scoreTiebreak }) {
   const allDone = groups.every((g) => g.done)
-  // One group and nobody goes on: pure round robin, the group winner is the champion
-  // (not while players are still level at the top and the host hasn't ordered them)
-  const top = groups[0].table
-  const champion =
-    !hasMainDraw && allDone && !(groups[0].openTie && top[0].tieKey && top[0].tieKey === top[1]?.tieKey)
-      ? top[0].name
-      : null
+  const champion = roundRobinChampion(groups, hasMainDraw)
   const pools = isPoolPlay(advance) // everyone goes on; results only decide seeding
   const word = groupWord(advance)
 

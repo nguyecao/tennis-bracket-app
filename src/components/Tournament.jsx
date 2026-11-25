@@ -7,6 +7,7 @@ import GroupStage from './GroupStage'
 import TournamentTitle from './TournamentTitle'
 import QrCard from './QrShare'
 import ScoreEditor from './ScoreEditor'
+import Celebration, { useCelebrations } from './Celebration'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
 // Tabs: [Group Stage] · Main Draw · Players. Leave out onPick / onReorder for a read-only (viewer) view.
@@ -23,6 +24,9 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
   const stageName = isPoolPlay(t.advance) ? 'Pool Play' : groups?.length === 1 && !main ? 'Round Robin' : 'Group Stage'
   const stageShort = { 'Pool Play': 'Pools', 'Group Stage': 'Groups' }[stageName] || stageName // phone tab label
   const groupsDone = groups?.every((g) => g.done)
+
+  // Confetti when a final (Main Draw or Consolation) is decided, on every screen at once
+  const celebration = useCelebrations(t, brackets)
 
   // Download a PDF of the draw as it stands right now (the PDF code loads on first use)
   const [pdf, setPdf] = useState(null) // null | 'saving' | 'failed'
@@ -210,6 +214,15 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
           </>
         )}
       </div>
+
+      {celebration.current && (
+        <Celebration
+          key={celebration.current.id}
+          champion={celebration.current}
+          title={t.name?.trim() || defaultName}
+          onDone={celebration.done}
+        />
+      )}
 
       {scoring && (
         <ScoreEditor

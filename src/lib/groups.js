@@ -140,6 +140,15 @@ export function getGroups(t) {
   })
 }
 
+// One group and nobody goes on: a pure round robin, and the group winner is the champion.
+// Not while players are still level at the top and the host hasn't put them in order.
+export function roundRobinChampion(groups, hasMainDraw) {
+  if (hasMainDraw || !groups.every((g) => g.done)) return null
+  const top = groups[0].table
+  if (groups[0].openTie && top[0].tieKey && top[0].tieKey === top[1]?.tieKey) return null
+  return top[0].name
+}
+
 // advance is 1–3, or 'all' for pool play for seeding (everyone goes on to the Main Draw).
 export const isPoolPlay = (advance) => advance === 'all'
 export const groupWord = (advance) => (isPoolPlay(advance) ? 'Pool' : 'Group')

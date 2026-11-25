@@ -4,6 +4,7 @@ import { makeGroups } from '../lib/groups'
 import { useSavedState } from '../lib/storage'
 import { useTheme } from '../lib/theme'
 import { today } from '../lib/dates'
+import { newChampions } from '../lib/champions'
 import Header from './Header'
 import Modal from './Modal'
 import LiveControls from './LiveControls'
@@ -49,14 +50,37 @@ export default function Host({ startAtHome = false }) {
   }
 
   // Click a player to make them the winner; click again to undo.
-  const pick = (id, name) => update({ tournament: withPick(tournament, id, name) })
+  // A result that decides a champion is checked with the host first: everyone watching
+  // gets a celebration, so a mis-tap shouldn't crown the wrong player.
+  function apply(next, { scored = false } = {}) {
+    const crowned = newChampions(tournament, next)
+    if (!crowned.length) return update({ tournament: next })
+    const [c] = crowned
+    setConfirm({
+      title: `Crown ${c.name}?`,
+      message: (
+        <>
+          <strong>{c.name}</strong> {c.opponent ? `beats ${c.opponent} and ` : ''}wins the {c.event}
+          {crowned.length > 1 ? ` (and ${crowned[1].name} wins the ${crowned[1].event})` : ''}.
+          {state.room ? ' Everyone watching will see the celebration.' : ''}
+          {scored ? ' Cancel to leave the score unsaved.' : ''}
+        </>
+      ),
+      label: 'Crown champion',
+      safe: true,
+      action: () => update({ tournament: next }),
+    })
+  }
+
+  const pick = (id, name) => apply(withPick(tournament, id, name))
 
   const rename = (name) => update({ tournament: { ...tournament, name } })
   const redate = (date) => update({ tournament: { ...tournament, date } })
-  const saveScore = (id, sets) => update({ tournament: withScore(tournament, id, sets) })
+  const saveScore = (id, sets) => apply(withScore(tournament, id, sets), { scored: true })
 
   // Host's order for group players still tied after head-to-head
-  const reorder = (group, order) => update({ tournament: withTieOrder(tournament, group, order) })
+  // Ordering tied players can decide (or change) a round robin's champion, so it's checked too
+  const reorder = (group, order) => apply(withTieOrder(tournament, group, order))
 
   // Ask before throwing away entered results.
   const hasResults = tournament && Object.keys(tournament.winners).length > 0
@@ -142,7 +166,7 @@ export default function Host({ startAtHome = false }) {
         <Modal
           title={confirm.title}
           confirmLabel={confirm.label}
-          danger
+          danger={!confirm.safe}
           onConfirm={() => {
             confirm.action()
             setConfirm(null)
