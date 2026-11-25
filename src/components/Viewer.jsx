@@ -49,9 +49,18 @@ export default function Viewer({ code, onLeave, onHost }) {
           defaultName={findTheme(hostTheme ?? theme.id).defaultName}
         />
       ) : (
-        <p className="notice loading">
-          {tournament === null ? 'The host is setting up a new bracket…' : 'Waiting for the host…'}
-        </p>
+        // Nothing to show yet: a bouncing ball, centered in the space below the header
+        <div className="waiting" role="status">
+          <div className="bounce" aria-hidden="true">
+            <div className="bounce-ball">
+              <span className="ball" />
+            </div>
+            <span className="bounce-shadow" />
+          </div>
+          <p className="notice loading">
+            {tournament === null ? 'The host is setting up a new bracket…' : 'Waiting for the host…'}
+          </p>
+        </div>
       )}
     </div>
   )
