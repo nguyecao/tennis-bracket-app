@@ -8,6 +8,7 @@ Enter 2–128 names and generate a single-elimination bracket. No database — e
 - Click a player to advance them; click again to undo.
 - **Tournament name and date** are optional and editable on the bracket (✎). With no name, the theme's name is used.
 - **Keep score** (optional): tap "+ Add score" under a match and enter any number of sets (1–5) in any format; the winner is filled in automatically. Turn on **Use scores to break ties in groups** to rank tied players by set difference, then game difference (after head-to-head).
+- **Match alerts** (viewers): when a ★ player's match finishes, a banner says who won or lost, the score, and what's next. Tap it to jump to the match. Results that finished while the page was closed show when you come back. Switch them off on the Players tab.
 - **Champion celebration**: when a final is decided (Main Draw, Consolation, or a one-group round robin), confetti and the champion's name appear on the host's and every viewer's screen at once, with the final score if scores are kept. Tap or wait a few seconds to close.
 - **Cheers** (live rooms): viewers and the host tap the 👏 button to send 👏 🔥 😮 🎉 or the theme's emoji, which float up everyone's screen. Each person gets 5 quick cheers, then one every 2 seconds (the host enforces this too). The host can switch cheers off with the Cheers switch.
 - **Download PDF** (right of the tabs): downloads a printable draw sheet of the bracket as it stands, with group tables and results. Hosts and viewers can both download it.
@@ -54,6 +55,7 @@ src/
     TournamentTitle.jsx   editable name + date
     QrShare.jsx           QR code card + enlarged view
     Modal.jsx             confirmation dialogs
+    MatchAlerts.jsx       alerts when a ★ player's match finishes
     Celebration.jsx       confetti + champion card when a final is decided
     Cheers.jsx            Cheer button, tray, and floating cheers
   lib/
@@ -68,6 +70,7 @@ src/
     follow.js             ★ highlights (per device)
     wakeLock.js           keep the screen awake while hosting
     dates.js              date helpers
+    alerts.js             what each match alert says
     cheers.js             cheer emoji, spam limit, and cheer events
     pdf.js                printable PDF draw sheet (jsPDF, loaded on demand)
 ```

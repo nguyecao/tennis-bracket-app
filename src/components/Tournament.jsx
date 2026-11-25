@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useFollowed } from '../lib/follow'
 import Players from './Players'
 import { BYE, getBrackets } from '../lib/bracket'
@@ -8,13 +8,27 @@ import TournamentTitle from './TournamentTitle'
 import QrCard from './QrShare'
 import ScoreEditor from './ScoreEditor'
 import Celebration, { useCelebrations } from './Celebration'
+import { AlertStack, useAlertsSetting, useMatchAlerts } from './MatchAlerts'
 import { isPoolPlay, groupWord } from '../lib/groups'
 
 // Tabs: [Group Stage] · Main Draw · Players. Leave out onPick / onReorder for a read-only (viewer) view.
 // defaultName: shown when the tournament has no name (depends on the theme).
 // shareRoom: live room code, if any; shows a QR code people can scan to watch.
 // onScore (host): save a match score; only used when the tournament keeps score.
-export default function Tournament({ t, onPick, onReorder, onRename, onRedate, onScore, defaultName, shareRoom }) {
+// onScoringChange (host): told which match's score box is open (or null), so viewers can hold
+// that match's alerts until the score is in. hostScoring (viewer): that match id, from the host.
+export default function Tournament({
+  t,
+  onPick,
+  onReorder,
+  onRename,
+  onRedate,
+  onScore,
+  defaultName,
+  shareRoom,
+  onScoringChange,
+  hostScoring = null,
+}) {
   const brackets = getBrackets(t)
   const { groups, main, consolation, labels, drawSeeds } = brackets
   // Seeds from the player list (Rank mode). After a group stage, the Main Draw
@@ -46,6 +60,12 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
   // Score entry (host, when this tournament keeps score)
   const [scoring, setScoring] = useState(null) // the match being scored
   const openScore = t.scoring && onScore && onPick ? setScoring : undefined
+  const scoringId = scoring?.id ?? null
+  useEffect(() => {
+    onScoringChange?.(scoringId)
+    return () => onScoringChange?.(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoringId])
 
   // Players highlighted with ★ (this device only)
   const { followed, toggle, clear } = useFollowed(t.created)
@@ -61,6 +81,28 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
     lastTab.current = tab
     setTab(next)
   }
+  // Viewers: a heads-up when a ★ player's match finishes (the host entered the result, so
+  // the host doesn't get them). Tapping one shows that match.
+  const viewer = !onPick
+  const [alertsOn, setAlertsOn] = useAlertsSetting()
+  const alerts = useMatchAlerts(t, brackets, followed, viewer && alertsOn, hostScoring)
+  function openMatch(a) {
+    alerts.dismissMatch(a.matchId) // both alerts, if both players are ★
+    const target = a.tab === 'groups' && groups ? 'groups' : 'main'
+    if (tab !== target) switchTab(target)
+    // after the tab has drawn: scroll the match into view (sideways too, on phones) and glow
+    setTimeout(() => {
+      const el = document.querySelector(`[data-match="${a.matchId}"]`)
+      if (!el) return
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center', inline: 'center' })
+      el.classList.remove('glow')
+      void el.offsetWidth // restart the glow if it's already running
+      el.classList.add('glow')
+      setTimeout(() => el.classList.remove('glow'), 2200)
+    }, tab !== target ? 120 : 0)
+  }
+
 
   // Numbers shown on the tabs
   const played = groups ? groups.reduce((n, g) => n + g.played, 0) : 0
@@ -174,6 +216,8 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
             followed={followed}
             onToggle={toggle}
             onClear={clear}
+            alertsOn={viewer ? alertsOn : null}
+            onAlertsChange={setAlertsOn}
           />
         ) : groups && (tab === 'groups' || !main) ? (
           <GroupStage
@@ -215,6 +259,16 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
         )}
       </div>
 
+      <AlertStack
+        list={alerts.list}
+        onDismiss={alerts.dismiss}
+        onDismissAll={alerts.dismissAll}
+        onOpen={openMatch}
+        onMore={() => {
+          alerts.dismissAll()
+          switchTab('players')
+        }}
+      />
       {celebration.current && (
         <Celebration
           key={celebration.current.id}

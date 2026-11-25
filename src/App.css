@@ -1477,3 +1477,180 @@ body:has(.cheer-fab) .app { padding-bottom: 7rem; } /* so the button never hides
   .touch-only { display: none; }
   .mouse-only { display: inline; }
 }
+
+/* ---------- Match alerts for ★ players (viewers) ---------- */
+/* Phones: top of the screen. Bigger screens: bottom left (clear of the header and Cheer button). */
+.alert-stack {
+  position: fixed;
+  top: calc(0.75rem + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 82; /* over the champion celebration (so a ★ runner-up's alert is seen), under cheers */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(26rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  pointer-events: none; /* only the alerts themselves take taps */
+}
+@media (min-width: 900px) {
+  .alert-stack { top: auto; bottom: 1.5rem; left: 1.5rem; width: 23rem; transform: none; }
+}
+.match-alert {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 14px;
+  border-left: 6px solid var(--follow);
+  color: #1b2a22;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  animation: alert-in 0.35s cubic-bezier(0.2, 1.2, 0.4, 1);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.match-alert.win { background: linear-gradient(135deg, #fff 60%, color-mix(in srgb, var(--follow) 18%, #fff)); }
+.match-alert.loss, .match-alert.more { border-left-color: #9aa8a0; }
+.match-alert.leaving { opacity: 0; transform: translateY(-8px); }
+@media (min-width: 900px) {
+  .match-alert { animation-name: alert-in-side; }
+  .match-alert.leaving { transform: translateX(-12px); }
+}
+@keyframes alert-in { from { opacity: 0; transform: translateY(-16px) scale(0.96); } }
+@keyframes alert-in-side { from { opacity: 0; transform: translateX(-24px); } }
+.alert-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.8rem 0 0.85rem 0.9rem;
+  border: 0;
+  border-radius: 14px 0 0 14px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+}
+.alert-main > span:last-child { display: grid; gap: 0.12rem; min-width: 0; }
+.alert-badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  background: var(--follow);
+  color: var(--follow-ink, #fff);
+}
+.match-alert.loss .alert-badge, .match-alert.more .alert-badge { background: #e7ecea; color: #5b6b62; }
+.alert-title { font-size: 1.02rem; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.match-alert.win .alert-title { font-size: 1.12rem; }
+.alert-star { color: var(--follow); }
+.alert-sub { font-size: 0.84rem; line-height: 1.3; color: #5b6b62; overflow-wrap: anywhere; }
+.alert-sub b { color: #1b2a22; font-variant-numeric: tabular-nums; }
+.alert-tap { margin-top: 0.2rem; font-size: 0.72rem; font-weight: 700; color: var(--accent); }
+.alert-close {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  font-size: 1rem;
+  color: #8a9a91;
+  background: transparent;
+}
+.alert-close:hover, .alert-close:focus-visible { color: #1b2a22; }
+/* time left */
+.alert-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 0 14px 0;
+  overflow: hidden;
+}
+.alert-bar::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, var(--follow) 65%, transparent);
+  transform-origin: left;
+}
+/* the bar drains only while the countdown runs, and stops while it's paused */
+.match-alert.counting .alert-bar::after { animation: alert-time var(--ms) linear forwards; }
+.match-alert.paused .alert-bar::after { animation-play-state: paused; }
+.match-alert.loss .alert-bar::after { background: #c9d2cd; }
+@keyframes alert-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* a little burst of stars around the trophy on a win */
+.alert-sparks { position: absolute; left: 0.9rem; top: 0.8rem; width: 2.6rem; height: 2.6rem; pointer-events: none; }
+.alert-sparks span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 0.9rem;
+  color: var(--follow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  animation: spark 0.9s ease-out calc(var(--i) * 40ms) forwards;
+  --a: calc(var(--i) * 60deg - 30deg);
+}
+@keyframes spark {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) translateY(0) rotate(calc(var(--a) * -1)) scale(0.4); }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-2.4rem) rotate(calc(var(--a) * -1)) scale(1); }
+}
+/* the match you jumped to from an alert glows for a moment */
+.match.glow { animation: match-glow 2.2s ease-out; }
+@keyframes match-glow {
+  0%, 60% { box-shadow: 0 0 0 3px var(--follow), 0 0 22px 6px color-mix(in srgb, var(--follow) 55%, transparent); }
+  100% { box-shadow: 0 0 0 3px transparent, 0 0 22px 6px transparent; }
+}
+
+/* Players tab: the Match alerts switch */
+.alerts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -0.25rem 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: #f3f6f4;
+  cursor: pointer;
+}
+.alerts-row > span { display: grid; gap: 0.1rem; }
+.alerts-row .muted { font-size: 0.82rem; }
+.switch-input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 1.4rem;
+  margin: 0;
+  border-radius: 999px;
+  background: #c9d2cd;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.switch-input::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(1.4rem - 6px);
+  height: calc(1.4rem - 6px);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.switch-input:checked { background: var(--court); }
+.switch-input:checked::after { transform: translateX(1rem); }
+.switch-input:focus-visible { outline: 2px solid var(--court); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .match-alert, .alert-sparks span, .match.glow { animation: none; }
+  .match.glow { box-shadow: 0 0 0 3px var(--follow); }
+  .alert-bar::after { animation-timing-function: linear; }
+}

@@ -32,20 +32,21 @@ function keepAlive(peer, isStopped, onRetry) {
   })
 }
 
-// Message sent to viewers: { tournament, theme, cheers }. tournament is null while the host
-// is setting up a new bracket; cheers says whether the host allows cheering.
+// Message sent to viewers: { tournament, theme, cheers, scoring }. tournament is null while the
+// host is setting up a new bracket; cheers says whether the host allows cheering; scoring is the
+// match whose score box the host has open (or null).
 // Cheers travel separately as { cheer: '👏' }.
 const isMessage = (m) =>
   !!m && (m.tournament === null || isTournament(m.tournament)) && typeof m.theme === 'string'
 
 // Host: broadcast the tournament (and theme) to everyone in the room. The only thing viewers
 // can send back is a cheer, so only the host can change results.
-export function useHost(code, tournament, theme, cheers = true) {
+export function useHost(code, tournament, theme, cheers = true, scoring = null) {
   const [status, setStatus] = useState('off')
   const [viewers, setViewers] = useState(0)
   const conns = useRef([])
   const latest = useRef(null)
-  latest.current = { tournament, theme, cheers }
+  latest.current = { tournament, theme, cheers, scoring }
 
   useEffect(() => {
     if (!code) return
@@ -126,8 +127,8 @@ export function useHost(code, tournament, theme, cheers = true) {
   }, [code])
 
   useEffect(() => {
-    conns.current.forEach((c) => c.open && c.send({ tournament, theme, cheers }))
-  }, [tournament, theme, cheers])
+    conns.current.forEach((c) => c.open && c.send({ tournament, theme, cheers, scoring }))
+  }, [tournament, theme, cheers, scoring])
 
   // The host's own cheer (already shown on the host's screen) goes to every viewer
   const sendCheer = (emoji) => conns.current.forEach((c) => c.open && c.send({ cheer: emoji }))
@@ -201,6 +202,7 @@ export function useViewer(code) {
     tournament: message?.tournament,
     theme: message?.theme,
     cheersOn: message?.cheers === true,
+    hostScoring: typeof message?.scoring === 'string' ? message.scoring : null,
     sendCheer,
   }
 }

@@ -11,7 +11,7 @@ const LABELS = { connecting: 'Connecting…', live: 'Live', offline: 'Host offli
 
 // Read-only view of someone else's live room.
 export default function Viewer({ code, onLeave, onHost }) {
-  const { status, tournament, theme: hostTheme, cheersOn, sendCheer } = useViewer(code)
+  const { status, tournament, theme: hostTheme, cheersOn, sendCheer, hostScoring } = useViewer(code)
 
   // Let viewers know when the host switches cheers off (not when they first arrive)
   const [cheersOffNote, setCheersOffNote] = useState(false)
@@ -69,6 +69,7 @@ export default function Viewer({ code, onLeave, onHost }) {
           key={tournament.created}
           t={tournament}
           shareRoom={code}
+          hostScoring={hostScoring}
           defaultName={findTheme(hostTheme ?? theme.id).defaultName}
         />
       ) : (

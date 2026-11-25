@@ -84,6 +84,7 @@ export default function Host({ startAtHome = false }) {
 
   // Ask before throwing away entered results.
   const hasResults = tournament && Object.keys(tournament.winners).length > 0
+  const [scoringId, setScoringId] = useState(null) // match whose score box is open (told to viewers)
   const [confirm, setConfirm] = useState(null) // { title, message, label, action }
   const guard = (title, message, label, action) =>
     hasResults ? setConfirm({ title, message, label, action }) : action()
@@ -101,6 +102,7 @@ export default function Host({ startAtHome = false }) {
             theme={theme.id}
             onRoomChange={(room) => update({ room })}
             cheers={state.cheers}
+            scoring={scoringId}
             onCheersChange={(cheers) => update({ cheers })}
           />
         )}
@@ -142,6 +144,7 @@ export default function Host({ startAtHome = false }) {
           onRename={rename}
           onRedate={redate}
           onScore={saveScore}
+          onScoringChange={setScoringId}
           defaultName={theme.defaultName}
           shareRoom={state.room}
         />

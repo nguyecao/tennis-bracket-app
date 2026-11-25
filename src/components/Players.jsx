@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { playerSummaries } from '../lib/players'
 
 // Every player with where they stand. Tap a player to highlight them (★) across all tabs.
-export default function Players({ t, brackets, groupWord, seedOf, followed, onToggle, onClear }) {
+// alertsOn / onAlertsChange (viewers only): the Match alerts switch. Leave out to hide it.
+export default function Players({ t, brackets, groupWord, seedOf, followed, onToggle, onClear, alertsOn = null, onAlertsChange }) {
   const [search, setSearch] = useState('')
   const all = playerSummaries(t, brackets)
   const query = search.trim().toLowerCase()
@@ -20,6 +21,21 @@ export default function Players({ t, brackets, groupWord, seedOf, followed, onTo
           </button>
         )}
       </h2>
+      {alertsOn !== null && (
+        <label className="alerts-row">
+          <span>
+            <b>🔔 Match alerts</b>
+            <span className="muted">Get a heads-up when a ★ player finishes a match</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            className="switch-input"
+            checked={alertsOn}
+            onChange={(e) => onAlertsChange(e.target.checked)}
+          />
+        </label>
+      )}
       <p className="muted group-help">
         Tap a player to highlight them with ★ in every tab. Highlights are only on this device.
       </p>

@@ -10,7 +10,7 @@ export default function Match({ match, onPick, seedOf, labels, arriving, followe
   const playable = a && b && a !== BYE && b !== BYE && !!onPick
 
   return (
-    <div className={`match${score ? ' scored' : ''}`}>
+    <div className={`match${score ? ' scored' : ''}`} data-match={id}>
       {[a, b].map((p, k) => {
         const real = p && p !== BYE
         const cls = !real ? 'empty' : !winner ? '' : winner === p ? 'won' : 'lost'

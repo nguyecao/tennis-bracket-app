@@ -7,8 +7,9 @@ import { CheerButton, CheerLayer } from './Cheers'
 
 // Host side of a live room: Go live / room status / Copy link / Cheers on-off / Stop sharing.
 // cheers: whether viewers may send cheers (the host can switch it off).
-export default function LiveControls({ room, tournament, theme, onRoomChange, cheers = true, onCheersChange }) {
-  const { status, viewers, sendCheer } = useHost(room, tournament, theme, cheers)
+// scoring: the match whose score box the host has open (viewers hold that match's alerts).
+export default function LiveControls({ room, tournament, theme, onRoomChange, cheers = true, onCheersChange, scoring = null }) {
+  const { status, viewers, sendCheer } = useHost(room, tournament, theme, cheers, scoring)
 
   // While this tab is hosting a room, keep the screen awake so viewers don't lose
   // the connection when the phone would normally auto-lock.
