@@ -24,6 +24,21 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
   const stageShort = { 'Pool Play': 'Pools', 'Group Stage': 'Groups' }[stageName] || stageName // phone tab label
   const groupsDone = groups?.every((g) => g.done)
 
+  // Download a PDF of the draw as it stands right now (the PDF code loads on first use)
+  const [pdf, setPdf] = useState(null) // null | 'saving' | 'failed'
+  async function savePdf() {
+    setPdf('saving')
+    try {
+      const { downloadPdf } = await import('../lib/pdf')
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--court')
+      await downloadPdf(t, { name: t.name?.trim() || defaultName, accent })
+      setPdf(null)
+    } catch (e) {
+      console.error(e)
+      setPdf('failed')
+    }
+  }
+
   // Score entry (host, when this tournament keeps score)
   const [scoring, setScoring] = useState(null) // the match being scored
   const openScore = t.scoring && onScore && onPick ? setScoring : undefined
@@ -97,32 +112,47 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
             onRedate={onRedate}
             defaultName={defaultName}
           />
-          <div className="tabs" role="tablist" ref={tabsRef}>
-            {pill && (
-              <span
-                className={`tab-pill${pill.slide ? ' sliding' : ''}`}
-                style={{ transform: `translateX(${pill.left}px)`, width: pill.width, height: pill.height, top: pill.top }}
-                aria-hidden="true"
-              />
-            )}
-            {groups && (
-              <button role="tab" aria-selected={tab === 'groups'} onClick={() => switchTab('groups')}>
-                <span className="wide-only">{stageName}</span>
-                <span className="narrow-only">{stageShort}</span>
-                <span className="tab-meta">
-                  {played}/{total}
-                </span>
+          {/* Tabs on the left, Download PDF on the right */}
+          <div className="tab-row">
+            <div className="tabs" role="tablist" ref={tabsRef}>
+              {pill && (
+                <span
+                  className={`tab-pill${pill.slide ? ' sliding' : ''}`}
+                  style={{ transform: `translateX(${pill.left}px)`, width: pill.width, height: pill.height, top: pill.top }}
+                  aria-hidden="true"
+                />
+              )}
+              {groups && (
+                <button role="tab" aria-selected={tab === 'groups'} onClick={() => switchTab('groups')}>
+                  <span className="wide-only">{stageName}</span>
+                  <span className="narrow-only">{stageShort}</span>
+                  <span className="tab-meta">
+                    {played}/{total}
+                  </span>
+                </button>
+              )}
+              {main && (
+                <button role="tab" aria-selected={tab === 'main'} onClick={() => switchTab('main')}>
+                  <span className="wide-only">Main Draw</span>
+                  <span className="narrow-only">Draw</span>
+                  {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta">Ready</span>}
+                </button>
+              )}
+              <button role="tab" aria-selected={tab === 'players'} onClick={() => switchTab('players')}>
+                Players <span className="tab-meta">{followed.size ? `★ ${followed.size}` : playerCount}</span>
               </button>
-            )}
-            {main && (
-              <button role="tab" aria-selected={tab === 'main'} onClick={() => switchTab('main')}>
-                <span className="wide-only">Main Draw</span>
-                <span className="narrow-only">Draw</span>
-                {groups && groupsDone && mainPlayed === 0 && <span className="tab-meta">Ready</span>}
-              </button>
-            )}
-            <button role="tab" aria-selected={tab === 'players'} onClick={() => switchTab('players')}>
-              Players <span className="tab-meta">{followed.size ? `★ ${followed.size}` : playerCount}</span>
+            </div>
+            <button
+              className="pdf-button"
+              onClick={savePdf}
+              disabled={pdf === 'saving'}
+              title="Download a printable PDF of the draw"
+              aria-label={pdf === 'saving' ? 'Preparing PDF' : 'Download PDF'}
+            >
+              <DownloadIcon />
+              <span className="pdf-label">
+                {pdf === 'saving' ? 'Preparing…' : pdf === 'failed' ? 'Try again' : 'Download PDF'}
+              </span>
             </button>
           </div>
         </div>
@@ -192,5 +222,13 @@ export default function Tournament({ t, onPick, onReorder, onRename, onRedate, o
         />
       )}
     </>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg className="download-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+    </svg>
   )
 }

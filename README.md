@@ -8,6 +8,7 @@ Enter 2–128 names and generate a single-elimination bracket. No database — e
 - Click a player to advance them; click again to undo.
 - **Tournament name and date** are optional and editable on the bracket (✎). With no name, the theme's name is used.
 - **Keep score** (optional): tap "+ Add score" under a match and enter any number of sets (1–5) in any format; the winner is filled in automatically. Turn on **Use scores to break ties in groups** to rank tied players by set difference, then game difference (after head-to-head).
+- **Download PDF** (right of the tabs): downloads a printable draw sheet of the bracket as it stands, with group tables and results. Hosts and viewers can both download it.
 - **Players** tab: every player's status and record. Tap ★ to highlight players across the bracket (saved on this device only).
 - Pick a theme (Classic, Wimbledon, Australian Open, US Open, Roland Garros) from the menu in the header. Each browser remembers its own choice.
 - **Go live** creates a 6-character room code. **Copy link** copies a viewer link to your clipboard. Anyone who opens it (or types the code under "Watching someone else's bracket?") sees results the moment you click them. Viewers can't change anything. A QR code beside the title opens the same viewer link (tap it to enlarge). While live, the host's screen is kept awake where the browser supports it.
@@ -63,4 +64,5 @@ src/
     follow.js             ★ highlights (per device)
     wakeLock.js           keep the screen awake while hosting
     dates.js              date helpers
+    pdf.js                printable PDF draw sheet (jsPDF, loaded on demand)
 ```
