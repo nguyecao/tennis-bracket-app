@@ -1654,3 +1654,21 @@ body:has(.cheer-fab) .app { padding-bottom: 7rem; } /* so the button never hides
   .match.glow { box-shadow: 0 0 0 3px var(--follow); }
   .alert-bar::after { animation-timing-function: linear; }
 }
+
+/* Viewer can't connect to the host (blocked network) */
+.cant-connect {
+  max-width: 26rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-radius: 14px;
+  border-top: 6px solid var(--ball);
+  text-align: center;
+  color: var(--ink, #1b2a22);
+  background: #fff;
+  animation: fade-up 0.3s ease-out;
+}
+.cant-connect-icon { font-size: 2.4rem; line-height: 1; }
+.cant-connect h2 { margin: 0.5rem 0 0.35rem; font-size: 1.3rem; }
+.cant-connect p { margin: 0 0 0.75rem; color: #4f5f56; }
+.cant-connect ul { margin: 0 0 1.1rem; padding-left: 1.2rem; text-align: left; color: #4f5f56; font-size: 0.92rem; line-height: 1.5; }
+.cant-connect button { min-width: 8rem; }
+.cant-connect-bar { color: var(--line); background: rgba(255, 255, 255, 0.14); }

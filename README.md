@@ -20,6 +20,18 @@ Enter 2–128 names and generate a single-elimination bracket. No database — e
 
 Your browser is the host and sends the bracket straight to viewers' browsers over WebRTC ([PeerJS](https://peerjs.com)). The free PeerJS cloud server only introduces the browsers to each other; it stores nothing. Viewers only get updates while the host's tab is open. If the host leaves, viewers keep the last bracket they saw and reconnect automatically when the host comes back. Your room code survives a refresh.
 
+### Relay for strict networks (TURN)
+
+Most viewers connect straight to the host. Some networks block that (office or school Wi-Fi, some phone carriers, Brave's strict privacy mode), so live rooms also use a relay: Metered's free Open Relay (20 GB/month, far more than bracket updates need).
+
+- **Live site:** add a repository secret named `VITE_TURN_CREDENTIALS_URL` (Settings → Secrets and variables → Actions) containing the "credentials" address from the Metered dashboard. The deploy workflow passes it to the build.
+- **Your own computer:** put the same line in a `.env.local` file in this folder (`VITE_TURN_CREDENTIALS_URL=https://…`). It's ignored by Git.
+- **Without it,** live rooms still work for most people, just without the relay.
+- **Test the relay:** add `?relay` to the page address (e.g. `…/tennis-bracket-app/?relay`) on both host and viewer to force the connection through it.
+- **Change the login** (e.g. if it's being misused) in the Metered dashboard; no app update needed. Usage is shown there too.
+
+If a viewer still can't connect after about 15 seconds, they see a "Can't connect" message with a Retry button.
+
 ## Run locally
 
 ```bash
@@ -69,6 +81,7 @@ src/
     players.js            per-player status and records
     follow.js             ★ highlights (per device)
     wakeLock.js           keep the screen awake while hosting
+    ice.js                network settings for live rooms (STUN + Metered relay)
     dates.js              date helpers
     alerts.js             what each match alert says
     cheers.js             cheer emoji, spam limit, and cheer events

@@ -1,3 +1,6 @@
 node_modules
 dist
 .DS_Store
+# local settings (e.g. the relay address for running on your own computer)
+.env.local
+*.local

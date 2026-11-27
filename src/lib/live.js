@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Peer from 'peerjs'
 import { isTournament } from './bracket'
 import { isCheer, viewerAllowance, showCheer } from './cheers'
+import { rtcConfig, hasRelay, relayConfigured } from './ice'
 
 // Rooms use the free PeerJS cloud server only to introduce browsers to each other.
 // Bracket data goes directly from the host's browser to viewers. Nothing is stored.
@@ -10,6 +11,28 @@ const host = import.meta.env.VITE_PEER_HOST // optional: your own PeerJS server,
 const OPTIONS = host
   ? { host: host.split(':')[0], port: +host.split(':')[1] || 443, secure: !host.includes('localhost') }
   : {}
+
+// PeerJS options plus the network settings (STUN + our relay; see ice.js). PeerJS's own
+// built-in relay no longer exists, so it's always replaced.
+const peerOptions = async () => ({ ...OPTIONS, config: await rtcConfig() })
+
+// If the relay couldn't be loaded when the peer started (a blip, Metered slow to answer), keep
+// trying in the background. PeerJS reads peer.options.config for every new connection, so
+// once it arrives, the next viewer connections use it without restarting the room.
+const RELAY_RETRY_MS = 20000
+function keepTryingRelay(peer) {
+  if (!relayConfigured || hasRelay(peer.options.config)) return () => {}
+  const timer = setInterval(async () => {
+    const config = await rtcConfig()
+    if (!hasRelay(config) || peer.destroyed) return
+    peer.options.config = config
+    clearInterval(timer)
+  }, RELAY_RETRY_MS)
+  return () => clearInterval(timer)
+}
+
+const CONNECT_TIMEOUT_MS = 20000 // a viewer's connection attempt that hasn't opened by then starts over
+export const STUCK_MS = 15000 // trying this long without success: tell the viewer (see Viewer.jsx)
 
 export function makeCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O or 1/I mix-ups
@@ -52,11 +75,16 @@ export function useHost(code, tournament, theme, cheers = true, scoring = null) 
     if (!code) return
     let peer, timer
     let stopped = false
+    let stopRelayRetry = () => {}
     const sync = () => setViewers(conns.current.length)
 
-    function start() {
+    async function start() {
       setStatus('connecting')
-      const p = (peer = new Peer(PREFIX + code, OPTIONS))
+      const options = await peerOptions()
+      if (stopped) return
+      const p = (peer = new Peer(PREFIX + code, options))
+      stopRelayRetry()
+      stopRelayRetry = keepTryingRelay(p)
       p.on('open', () => setStatus('live'))
       keepAlive(p, () => stopped, () => setStatus('connecting'))
       p.on('error', () => {
@@ -119,6 +147,7 @@ export function useHost(code, tournament, theme, cheers = true, scoring = null) 
       clearTimeout(timer)
       ctrl.abort()
       release?.()
+      stopRelayRetry()
       peer?.destroy()
       conns.current = []
       setViewers(0)
@@ -137,44 +166,72 @@ export function useHost(code, tournament, theme, cheers = true, scoring = null) 
 }
 
 // Viewer: connect to a room and keep retrying if the host isn't there.
+// status: 'connecting' (trying to reach the host), 'live', or 'offline' (the host isn't
+// online, or the connection dropped). stuck: still 'connecting' after STUCK_MS, which means
+// the host is there but this network won't let the two connect. retry(): start over.
 export function useViewer(code) {
   const [status, setStatus] = useState('connecting')
   const [message, setMessage] = useState(null) // latest { tournament, theme, cheers } from the host
   const connRef = useRef(null)
+  const [attempt, setAttempt] = useState(0) // bumped by retry() to start over from scratch
+  const [stuck, setStuck] = useState(false)
 
   useEffect(() => {
-    let peer, conn, connectTimer, peerTimer
+    let peer, conn, connectTimer, peerTimer, openTimer
     let stopped = false
+    let stopRelayRetry = () => {}
 
-    const retryConnect = () => {
+    // next: the status to show while waiting to try again
+    const retryConnect = (next) => {
       if (stopped) return
-      setStatus('offline')
+      clearTimeout(openTimer)
+      setStatus(next)
       clearTimeout(connectTimer)
       connectTimer = setTimeout(connect, 4000)
     }
 
     function connect() {
-      if (stopped || conn?.open || !peer.open) return // !open: runs again on 'open'
+      if (stopped || conn?.open || !peer?.open) return // !open: runs again on 'open'
       const c = peer.connect(PREFIX + code, { reliable: true })
       const old = conn
       conn = connRef.current = c
       old?.close()
-      c.on('open', () => c === conn && setStatus('live'))
+      let opened = false
+      c.on('open', () => {
+        if (c !== conn) return
+        opened = true
+        clearTimeout(openTimer)
+        setStatus('live')
+      })
       c.on('data', (m) => {
         if (c !== conn) return
         if (isMessage(m)) setMessage(m)
         else if (isCheer(m)) showCheer(m.cheer)
       })
-      c.on('close', () => c === conn && retryConnect())
-      c.on('error', () => c === conn && retryConnect())
+      // A connection that was working and dropped: the host went away. One that never opened:
+      // the host is there but we couldn't get through yet, so keep saying "Connecting".
+      const failed = () => c === conn && retryConnect(opened ? 'offline' : 'connecting')
+      c.on('close', failed)
+      c.on('error', failed)
+      // Some blocked networks never report a failure: give up on this attempt and try again
+      clearTimeout(openTimer)
+      openTimer = setTimeout(() => {
+        if (c !== conn || c.open) return
+        c.close()
+        retryConnect('connecting')
+      }, CONNECT_TIMEOUT_MS)
     }
 
-    function start() {
-      const p = (peer = new Peer(OPTIONS))
+    async function start() {
+      const options = await peerOptions()
+      if (stopped) return
+      const p = (peer = new Peer(options))
+      stopRelayRetry()
+      stopRelayRetry = keepTryingRelay(p)
       p.on('open', connect)
       keepAlive(p, () => stopped, () => {})
       p.on('error', (err) => {
-        if (err.type === 'peer-unavailable') return retryConnect() // host not online
+        if (err.type === 'peer-unavailable') return retryConnect('offline') // host not online
         setTimeout(() => {
           if (stopped || !p.destroyed) return
           setStatus('offline')
@@ -184,14 +241,29 @@ export function useViewer(code) {
       })
     }
 
+    setStatus('connecting')
     start()
     return () => {
       stopped = true
       clearTimeout(connectTimer)
       clearTimeout(peerTimer)
-      peer.destroy()
+      clearTimeout(openTimer)
+      stopRelayRetry()
+      peer?.destroy()
     }
-  }, [code])
+  }, [code, attempt])
+
+  // Still connecting after a while: let the viewer know (and offer to retry)
+  useEffect(() => {
+    if (status !== 'connecting') return setStuck(false)
+    const t = setTimeout(() => setStuck(true), STUCK_MS)
+    return () => clearTimeout(t)
+  }, [status, attempt])
+
+  const retry = () => {
+    setStuck(false)
+    setAttempt((n) => n + 1)
+  }
 
   // This viewer's cheer (already shown on their own screen) goes to the host to pass on
   const sendCheer = (emoji) => connRef.current?.open && connRef.current.send({ cheer: emoji })
@@ -204,5 +276,7 @@ export function useViewer(code) {
     cheersOn: message?.cheers === true,
     hostScoring: typeof message?.scoring === 'string' ? message.scoring : null,
     sendCheer,
+    stuck,
+    retry,
   }
 }

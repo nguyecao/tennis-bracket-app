@@ -11,7 +11,7 @@ const LABELS = { connecting: 'Connecting…', live: 'Live', offline: 'Host offli
 
 // Read-only view of someone else's live room.
 export default function Viewer({ code, onLeave, onHost }) {
-  const { status, tournament, theme: hostTheme, cheersOn, sendCheer, hostScoring } = useViewer(code)
+  const { status, tournament, theme: hostTheme, cheersOn, sendCheer, hostScoring, stuck, retry } = useViewer(code)
 
   // Let viewers know when the host switches cheers off (not when they first arrive)
   const [cheersOffNote, setCheersOffNote] = useState(false)
@@ -42,7 +42,7 @@ export default function Viewer({ code, onLeave, onHost }) {
       <Header theme={theme} onThemeChange={setTheme} hostTheme={hostTheme}>
         <span className={`pill ${status}`}>
           Room {code} ·{' '}
-          <span className={status === 'live' ? '' : 'loading'}>{LABELS[status]}</span>
+          {stuck ? "Can't connect" : <span className={status === 'live' ? '' : 'loading'}>{LABELS[status]}</span>}
         </span>
         <button onClick={onLeave}>Leave</button>
       </Header>
@@ -52,6 +52,16 @@ export default function Viewer({ code, onLeave, onHost }) {
           This is your room. You're viewing it as a spectator.
           <button className="primary" onClick={onHost}>
             Go to host view
+          </button>
+        </div>
+      )}
+
+      {/* Connected before but can't get back in: say so above the (last seen) bracket */}
+      {stuck && tournament !== undefined && (
+        <div className="notice-bar cant-connect-bar" role="alert">
+          <span>Can't reach the host right now. Results may be out of date.</span>
+          <button className="primary" onClick={retry}>
+            Retry
           </button>
         </div>
       )}
@@ -72,6 +82,25 @@ export default function Viewer({ code, onLeave, onHost }) {
           hostScoring={hostScoring}
           defaultName={findTheme(hostTheme ?? theme.id).defaultName}
         />
+      ) : stuck && tournament === undefined ? (
+        // The host is there, but this network won't let us connect to them
+        <div className="waiting">
+          <div className="cant-connect" role="alert">
+            <div className="cant-connect-icon" aria-hidden="true">
+              📡
+            </div>
+            <h2>Can't connect to the host</h2>
+            <p>Your device can't reach the host's. This network may be blocking live connections.</p>
+            <ul>
+              <li>Switch between Wi-Fi and mobile data, then retry</li>
+              <li>Turn off any VPN or private browsing mode</li>
+              <li>Make sure the host still has the bracket open</li>
+            </ul>
+            <button className="primary" onClick={retry}>
+              Retry
+            </button>
+          </div>
+        </div>
       ) : (
         // Nothing to show yet: a bouncing ball, centered in the space below the header
         <div className="waiting" role="status">
